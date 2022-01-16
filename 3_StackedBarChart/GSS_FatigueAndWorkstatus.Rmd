@@ -1,0 +1,141 @@
+---
+title: "Task 5: Stacked Bar Charts"
+author: "Mileva Van Tuyl"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy=TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60))
+```
+
+# Load Libraries
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+# Read Data
+```{r cache=TRUE, warning = FALSE, message = FALSE}
+GSS2018 <- read_csv(file="./data/GSS2018.csv")
+dim(GSS2018)
+```
+
+# Process Data
+***Fatigue and workstatus from the 2018 GSS Data***    
+Respondents were asked the following two questions:  
+
+1. “In the past seven days, how would you rate your fatigue on average?”  
+2. "Last week were you working full time, part time, going to   
+school, keeping house, or what?"
+
+```{r}
+# Drop NA values in the fatigue column 
+GSS2018.clean <- GSS2018 %>% drop_na(fatigue) %>% filter(wrkstat != 9)
+GSS2018.clean
+```
+
+```{r}
+# Recode the fatigue and workstatus columns
+GSS2018.coded <- GSS2018.clean %>% 
+  select(fatigue, wrkstat) %>% 
+  transmute(fatigue = fct_recode(as.factor(GSS2018.clean$fatigue), 
+                                 None='1', Mild='2', Moderate='3', 
+                                 Severe='4', VerySevere='5')) %>%
+  mutate(workstatus = fct_recode(as.factor(GSS2018.clean$wrkstat), 
+                                 FullTime='1', PartTime='2', TempNotWorking='3', 
+                                 UnemployedLaidOff='4', Retired='5', School='6', 
+                                 House='7', Other='8'))
+
+GSS2018.coded
+```
+# Initial Exploratory Data Analysis
+Initial analysis to understand how fatigue breaks down by work status.
+
+```{r}
+# Compute conditional proportions (i.e. workstatus given a certain level of fatigue)
+dataplot <- GSS2018.coded %>% 
+  group_by(fatigue) %>% 
+  count(workstatus) %>% 
+  mutate(prop = n/sum(n)) %>%
+  select(fatigue, workstatus, prop)
+
+dataplot
+```
+
+```{r}
+# Stacked bar chart of workstatus given each level of fatigue)
+
+ggplot(data=dataplot, aes(x=fatigue, y=prop, fill=fct_rev(workstatus))) + 
+  geom_bar(stat='identity', position='stack')
+```
+
+# 
+  
+
+```{r}
+# Recode workstatus variable
+workstatus.recoded <- GSS2018.clean$wrkstat %>% 
+  as.factor() %>% 
+  fct_recode(FullTime='1', PartTime='2', TempNotWorking='3', 
+             UnemployedLaidOff='4', Retired='5', School='6', House='7', Other='8') %>%
+  fct_collapse(Other=c('Other', 'TempNotWorking'), Employed=c('FullTime', 'PartTime')) 
+
+unique(workstatus.recoded)
+```
+
+
+```{r}
+# Recode fatigue variable
+fatigue.recoded <- GSS2018.clean$fatigue %>%
+  as.factor() %>%
+  fct_recode(None='1', Mild='2', Moderate='3', Severe='4', VerySevere='5') 
+
+unique(fatigue.recoded)
+```
+
+```{r}
+# Recode GSS2018 dataset
+GSS2018.recoded <- GSS2018.clean %>% 
+  select(fatigue, wrkstat) %>% 
+  transmute(fatigue = fatigue.recoded) %>%
+  mutate(workstatus = workstatus.recoded) %>%
+  filter(workstatus != "Other")
+
+GSS2018.recoded
+```
+
+```{r}
+# Compute conditional proportions (i.e. workstatus given a certain level of fatigue)
+dataplot <- GSS2018.recoded %>% 
+  group_by(fatigue) %>% 
+  count(workstatus) %>% 
+  mutate(percentage = 100 * n/sum(n)) %>%
+  select(fatigue, workstatus, percentage)
+
+dataplot
+```
+# Stacked Bar Chart Visualization
+
+```{r}
+ggplot(data=dataplot, aes(x=fatigue, y=percentage, fill=fct_rev(workstatus))) + 
+  geom_bar(stat='identity', position='stack') +
+  scale_x_discrete(limits=c('None', 'Mild', 'Moderate', 'Severe', 'VerySevere'),
+                   labels=c('No \nFatigue', 'Mild \nFatigue', 'Moderate \nFatigue',
+                            'Severe \nFatigue', 'Very Severe \n Fatigue')) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_discrete(limits=rev(c("Employed", "UnemployedLaidOff", 
+                                    "Retired", "School", "House")),
+                      labels=rev(c("Employed", "Unemployed", "Retired", "School", 
+                                   "House"))) + 
+  labs(x = "",
+       y = 'Percentage (%)',
+       title = 'Associations Between Fatigue and Work Status',
+       subtitle = '2018 GSS Data', 
+       fill = "Work Status") +
+    theme_classic() 
+
+```

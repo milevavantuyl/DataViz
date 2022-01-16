@@ -1,0 +1,136 @@
+---
+title: "Task 5: Comparison of Categorical Variables (NCF Alumn Data) "
+author: "Mileva Van Tuyl"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries 
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+```
+
+# Read data
+```{r}
+alums <- read_csv(file="./data/NCAlumn.csv")
+dim(alums)
+```
+
+# Initial Data Exploration
+```{r}
+# Number of unique divisions, industries, and academic programs
+cat("Num Unique Academic Programs:", length(unique(alums$ACADEMIC_PROGRAM_1)))
+cat("\nNum Unique Division_1:", length(unique(alums$DIVISION_1)))
+cat("\nNum Unique Industries:", length(unique(alums$Industry)))
+```
+
+```{r}
+# Number of alums going into each industry
+alums.count <- alums %>% select(Industry) %>% count(Industry) %>% arrange(desc(n))
+alums.count
+```
+Methods for collapsing the 99 unique industries
+```{r}
+# Industries that show up at least 1% of the time
+unique(fct_lump(alums$Industry, prop=0.01))
+
+# The top 7 industries + Other
+unique(fct_lump(alums$Industry, n=7))
+```
+
+Methods for collapsing the 41 unique ACADEMIC_PROGRAM_1s
+```{r}
+# Programs that show up at least 5% of the time
+unique(fct_lump(alums$ACADEMIC_PROGRAM_1, prop=0.05))
+
+# Top 5 programs + 1
+unique(fct_lump(alums$ACADEMIC_PROGRAM_1, n=5))
+```
+
+### Initial bar chart by AOC and top 6 industries
+```{r}
+# Recoded factors
+aoc.recoded <- alums$ACADEMIC_PROGRAM_1 %>% fct_lump(prop=0.05)
+industry.recoded <- fct_lump(alums$Industry, n=6)
+alums.recoded <- alums %>% mutate(Industry = industry.recoded, aoc = aoc.recoded)
+
+# Computation 
+dataplot <- alums.recoded %>%
+    drop_na(aoc, Industry) %>%
+    select(aoc, Industry) %>% 
+    mutate(Industry=fct_infreq(Industry)) %>%
+    filter(Industry != 'Other') %>%
+    group_by(aoc) %>% 
+    count(Industry) %>% 
+    mutate(Percentage=100.0 * n/sum(n))
+
+# Colors
+mycols <- brewer.pal(7, 'Set3')
+
+# Plot
+ggplot(data = dataplot, aes(y=aoc, x=Percentage, fill=fct_rev(Industry))) + 
+  geom_bar(stat='Identity', position='stack', color = gray(0.3)) +
+  scale_y_discrete(limits = rev(c('Humanities','Anthropology', 'Political Science', 
+                                  'Economics',  'Psychology', 'Environmental Studies',
+                                  'Biology', 'Chemistry', 'Other')), 
+                   labels = rev(c('Humanities', 'Anthropology', 'Political\n Science', 
+                                  'Economics',  'Psychology', 'Environmental\n Studies', 
+                                  'Biology', 'Chemistry', 'Other'))) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = mycols) +
+  labs(title = 'Top 6 Industries by Academic Degree',
+       y = '',
+       x = 'Percentage (%)',
+       fill = 'Industry') +
+  theme_classic() + 
+  theme(axis.title.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10))
+  
+```
+
+### Side-by-side Bar Chart: Academic Division and top 7 Industries
+```{r}
+# Recoded factors
+division_1 <- alums$DIVISION_1
+industry.recoded <- fct_lump(alums$Industry, n=7)
+alums.recoded <- alums %>% mutate(Industry = industry.recoded)
+
+# Computation 
+dataplot <- alums.recoded %>%
+    drop_na(DIVISION_1, Industry) %>%
+    select(DIVISION_1, Industry) %>% 
+    filter(Industry != 'Other') %>%
+    mutate(Industry=fct_infreq(Industry)) %>%
+    group_by(DIVISION_1) %>% 
+    count(Industry) %>% 
+    mutate(Percentage=100.0 * n/sum(n))
+
+# Colors
+mycols <- brewer.pal(7, 'Set3')
+
+# Plot
+ggplot(data = dataplot, aes(x=DIVISION_1, y=Percentage, fill=Industry)) + 
+  geom_bar(stat='Identity', position='dodge2', color = gray(0.3)) + 
+  scale_x_discrete(limits = c('Humanities', 'Social Sciences', 'Natural Sciences', 'Interdisciplinary')) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) + 
+  scale_fill_manual(values = mycols) + 
+  labs(title = 'Top 7 Industries by Academic Division', 
+       x = 'Academic Division',
+       y = 'Percentage (%)', 
+       fill = 'Industry') + 
+  theme_minimal() + 
+  theme(axis.title.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 10), 
+        axis.text.x = element_text(size = 10))
+  
+```
+

@@ -1,0 +1,88 @@
+---
+title: "General Social Survey: Fatigue data from 2018"
+author: "Mileva Van Tuyl"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy=TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60))
+```
+
+# Load Libraries
+```{r cache=TRUE, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+library(dplyr)
+```
+
+# Read Data
+```{r cache=TRUE, warning = FALSE, message = FALSE}
+GSS2018 <- read_csv(file="./data/GSS2018.csv")
+dim(GSS2018)
+```
+
+```{r, results='hide'}
+# List GSS variables with more than 5 categories
+GSS2018 %>% select(where(~ length(unique(.x)) > 5)) %>% colnames
+```
+
+# Data Processing
+**Fatigue from the 2018 GSS Data**
+Respondents were asked to respond to the following question:   
+"In the past seven days, how would you rate your fatigue on average?"
+```{r}
+# Recode the responses
+GSS2018.fatigue <- GSS2018 %>% 
+  select(fatigue) %>% 
+  transmute(fatigue = fct_recode(as.factor(GSS2018$fatigue), 
+                                 None='1', Mild='2', Moderate='3', Severe='4', 
+                                 VerySevere='5')) 
+```
+
+```{r}
+# Compute the percentage of respondents for each response 
+dataplot <- GSS2018.fatigue %>% 
+  select(fatigue) %>% 
+  drop_na(fatigue) %>%
+  count(fatigue) %>% 
+  add_count(wt = n) %>%
+  rename(total='nn') %>%
+  mutate(prop=100 * n/total) %>%
+  select(fatigue, prop)
+
+dataplot
+```
+# Bar Chart Visualization
+Bar chart of the responses to the question on fatigue from the General Social Survey (2018).
+```{r}
+# Color scheme
+mycols <- brewer.pal(5, 'Set2')
+
+# Bar chart 
+ggplot(data=dataplot, 
+       aes(x=fatigue, y=prop, fill=fatigue)) + 
+  geom_bar(stat='identity') + 
+  scale_x_discrete(limits=c('None', 'Mild', 'Moderate', 'Severe', 'VerySevere'), 
+                   labels=c('No \nFatigue', 'Mild \nFatigue', 'Moderate \nFatigue', 
+                            'Severe \nFatigue', 'Very Severe \n Fatigue')) + 
+  scale_y_continuous(expand=c(0,0)) +
+  scale_fill_manual(values=mycols) +
+  coord_cartesian(ylim=c(0, 50)) + 
+  labs(x = "",
+       y = 'Percentage (%)', 
+       title = 'Fatigue in the past 7 days', 
+       subtitle = '2018 GSS Data') + 
+  geom_text(aes(label=paste0(format(prop, digits=1), '%'), y=prop+2)) + 
+  guides(fill = 'none') +
+  theme_classic() + 
+  theme(axis.title = element_text(size=12), 
+        axis.text = element_text(size=11), 
+        plot.title = element_text(size=14), 
+        plot.subtitle = element_text(size=12)
+        )
+```
+

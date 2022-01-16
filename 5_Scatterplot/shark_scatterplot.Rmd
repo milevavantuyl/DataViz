@@ -1,0 +1,49 @@
+---
+title: "Task 5: Comparison of Categorical Variables NCF Alumn Dataset "
+author: "Mileva Van Tuyl"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries 
+```{r, warning=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+library(plotly)
+```
+
+# Read Data
+```{r, warning=FALSE}
+sharks <- read_csv(file="./data/SharksClean.csv")
+dim(sharks)
+```
+
+# Interactive Scatterplot
+```{r, warning=FALSE}
+mycols <- brewer.pal(4, 'Dark2')
+plot_ly(data=sharks, 
+        type='scatter', 
+        mode='markers', 
+        x = ~ToothSize, 
+        y = ~BodySize, 
+        color = ~Genus,
+        colors = mycols,
+        opacity = 0.7,
+        marker = list(size = 11),
+        text = paste0('Genus: ', sharks$Genus, '<br>',
+                      'Species: ', sharks$Species, '<br>', 
+                      'Tooth Size: ', sharks$ToothSize, '<br>', 
+                      'Body Size: ', sharks$BodySize, '<br>'),
+        hoverinfo = 'text') %>%
+  layout(title = list(text = "Sharks: Body size vs. Tooth Size"), 
+         xaxis = list(title = "Tooth Size", zeroline = FALSE), 
+         yaxis = list(title = "Body Size"),
+         legend = list(title = list(text = 'Genus'))) %>% 
+  config(displayModeBar = F)
+```
+

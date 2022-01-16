@@ -1,0 +1,79 @@
+---
+title: "Task 4: Histogram and Boxplot"
+author: "Mileva Van Tuyl"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load libraries
+```{r, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(cowplot)
+```
+
+# Load data
+```{r, warning=FALSE}
+loans <- read_csv(file="./data/LendingClubLoanData.csv")
+dim(loans)
+```
+
+# Summary Statistics
+```{r}
+summary(loans$int_rate)
+IQR(loans$int_rate, na.rm=TRUE)
+sd(loans$int_rate, na.rm = TRUE)
+```
+
+# Histogram 
+```{r}
+hist_all <- ggplot(data=loans, aes(x=int_rate, y=..count../1000)) + 
+        geom_histogram(boundary = 0, binwidth = 1, closed='left', 
+                       fill='#C3B1E1', color=gray(0.4), alpha = 0.5) + 
+        geom_density(aes(y=..count../1000), color = 'black', adjust=4) +
+        scale_x_continuous(breaks=seq(0, max(loans$int_rate, na.rm=TRUE), 5)) + 
+        scale_y_continuous(expand=c(0,0)) +
+        labs(title = 'Distribution of Interest Rates', 
+           subtitle = 'Lending Club Loan Data', 
+           x = 'Interest Rate (%)', 
+           y = 'Frequency (in thousands)') + 
+        theme_classic() + 
+        theme(plot.title = element_text(hjust=0.5), 
+            plot.subtitle = element_text(hjust=0.5), 
+            axis.text = element_text(size=10), 
+            axis.title = element_text(size=12))
+
+hist_all
+```
+
+# Box plot
+```{r}
+box_all <- ggplot(data=loans, aes(x=int_rate)) + 
+  geom_boxplot(fill='#C3B1E1', alpha = 0.5, color=gray(0.4), 
+               outlier.shape=21, outlier.fill='#C3B1E1', outlier.alpha=0.2) +
+  scale_x_continuous(name=NULL, breaks=NULL) +
+  scale_y_continuous(name=NULL, breaks=NULL) + 
+  theme_classic() +
+  theme(
+    axis.line.y=element_blank(),
+    axis.line.x=element_blank()
+  )
+  
+box_all
+```
+
+# Combined Histogram and Boxplot
+```{r}
+plot_grid(hist_all, box_all, nrow=2, rel_heights=c(0.85, 0.15), 
+          align='v', axis='lr')
+```
+The distribution of interest rates is right-skewed and bimodal with a median of 12.6% and a mean of 13.1%. The interest rates exhibit some variation with an IQR of 6.5% and a standard deviation of 4.8%. The box plot also highlights some potential outliers with interest rates from 25.7% to 31.0%. 
+
+
+
+
