@@ -111,7 +111,7 @@ ggplot(data = data.bar, aes(x = owngun, y = prop, fill = fct_rev(gunlaw))) +
   scale_x_discrete(limits=c('No', 'Yes')) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   labs(title = "Opinions on Gun Control in America", 
-       subtitle = '2016 GSS Data', 
+       subtitle = 'General Social Survey Data', 
        x = 'Gun Owner',
        y = 'Percentage (%)', 
        fill = 'Favor or Oppose Gun Permits') + 

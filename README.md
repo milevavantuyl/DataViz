@@ -4,9 +4,9 @@
 #### Data Visualization Portfolio    
 
 
-1. Bar chart of the "Fatigue" variable from the 2018 General Social Survey 
-2. Combined histogram and box plot of interest rates from LendingClub loan data
-3. Stacked bar chart to compare respondent's fatigue and work status (2018 General Social Survey)
-4. Side-by-side bar chart of data on New College of Florida graduates 
-5. Interactive scatter plot on the association between shark tooth size and shark size
-6. Chord Diagram on employment data regarding New College of Florida graduates 
+1. An analysis of data from the 2018 General Social Survey on fatigue experienced by the American people
+2. The distribution of interest rates on loans made by LendingClub, a peer-peer lending company
+3. Uncovering relationships between respondent's work status and fatigue level using the General Social Survey
+4. An initial analysis of employment trends among New College of Florida alumni
+5. An interactive scatter plot illustrating the relationship between shark tooth size and shark size
+6. A response to Hillary Clinton's 2016 tweet on gun control
