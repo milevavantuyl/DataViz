@@ -109,42 +109,11 @@ data.bar
 ggplot(data = data.bar, aes(x = owngun, y = prop, fill = fct_rev(gunlaw))) + 
   geom_bar(stat='identity', position='stack') +
   scale_x_discrete(limits=c('No', 'Yes')) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   labs(title = "Opinions on Gun Control in America", 
        subtitle = '2016 GSS Data', 
        x = 'Gun Owner',
        y = 'Percentage (%)', 
-       fill = 'Favor or Oppose Gun Permits') + 
-  theme_bw() + 
-  theme(plot.title = element_text(hjust = 0.5), 
-        plot.subtitle = element_text(hjust = 0.5))
-```
-
-
-```{r}
-# Computations for counts
-
-data.bar <- GSS2016.recoded %>%
-    drop_na(owngun, gunlaw) %>%
-    filter(owngun != 'Refused') %>%
-    group_by(owngun) %>%
-    count(gunlaw) %>%
-    select(owngun, gunlaw, n)
-
-data.bar
-```
-
-```{r}
-# Bar chart of counts per gun ownership group
-
-ggplot(data = data.bar, aes(x = owngun, y = n, fill = fct_rev(gunlaw))) + 
-  geom_bar(stat='identity', position='stack') +
-  scale_x_discrete(limits=c('No', 'Yes')) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) +
-  labs(title = "Opinions on Gun Control in America", 
-       subtitle = '2016 GSS Data', 
-       x = 'Gun Owner',
-       y = 'Count', 
        fill = 'Favor or Oppose Gun Permits') + 
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5), 
