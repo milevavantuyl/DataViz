@@ -1,0 +1,164 @@
+---
+title: "Gun Control"
+author: "Mileva Van Tuyl"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages
+```{r}
+library(naniar)
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+library(vcd)
+```
+
+# Read data
+```{r}
+GSS2016 <- read.csv('./data/GSS2016.csv')
+dim(GSS2016)
+```
+
+# Processing and Analysis
+An analysis of gun ownership and support for background checks when purchasing guns in response to Hillary Clinton's faulty venn diagram from 2016 on gun control ![](https://www.washingtonpost.com/news/the-fix/wp/2016/05/20/we-fixed-hillary-clintons-terrible-venn-diagram-on-gun-control/). 
+
+The 2016 General Social Survey contains data on gun control opinions in America. 
+1. Variable: owngun. Question phrasing: "Do you happen to have in your home (or garage) any guns or 
+revolvers?"
+2. Variable: gunlaw. Question phrasing: "Would you favor or oppose a law which would require a person 
+to obtain a police permit before he or she could buy a gun?"
+
+## Data Processing
+First, we must process the data (e.g. recode the responses to the owngun and gunlaw variables and handle missing values).
+```{r}
+na_strings = c('0', '8', '9')
+
+# Recode the owngun variable
+owngun.recoded <- GSS2016$owngun %>%
+    as.factor %>%
+    fct_recode(Yes = '1', No = '2', Refused = '3')
+
+# Recode the gunlaw variable
+gunlaw.recoded <- GSS2016$gunlaw %>% 
+  as.factor %>%
+  fct_recode(Favor = '1', Oppose = '2')
+
+# Recoded GSS data
+GSS2016.recoded <- GSS2016 %>%
+    select(owngun, gunlaw) %>%
+    replace_with_na_all(condition = ~.x %in% na_strings) %>%
+    mutate(owngun = owngun.recoded) %>%
+    mutate(gunlaw = gunlaw.recoded)
+
+GSS2016.recoded
+```
+## Pie Chart
+Second, what percentage of respondents favor gun laws? What percentage oppose them?  
+
+```{r}
+# Compute the percentage of those in favor and in opposition
+
+data.pie <- GSS2016.recoded %>% 
+  drop_na(owngun, gunlaw) %>%
+  add_count(gunlaw) %>%
+  mutate(percentage = n/ sum(unique(n))) 
+
+data.pie
+```
+```{r}
+# Pie chart 
+
+mycols = brewer.pal(2, 'Set2')
+
+ggplot(data = data.pie, aes(x = "", y = percentage, fill = gunlaw)) + 
+  geom_bar(stat='identity') + 
+  coord_polar("y", start=0) +
+  labs(title = 'Opinions on Gun Control in America',
+       subtitle = 'GSS 2016 Data',
+       fill = 'Favor or Oppose Gun Permits') + 
+  scale_fill_manual(values = mycols) +
+  theme_void() + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+# Stacked bar chart
+Third, compute the proportion of those in favor and in opposition to gun laws conditioning on whether the respondent owns a gun. 
+
+```{r}
+# Computations for conditional probabilities
+
+data.bar <- GSS2016.recoded %>%
+    drop_na(owngun, gunlaw) %>%
+    filter(owngun != 'Refused') %>%
+    group_by(owngun) %>%
+    count(gunlaw) %>%
+    mutate(prop = 100 * n/ sum(n)) %>%
+    select(owngun, gunlaw, prop)
+
+data.bar
+```
+
+```{r}
+# Bar chart
+
+ggplot(data = data.bar, aes(x = owngun, y = prop, fill = fct_rev(gunlaw))) + 
+  geom_bar(stat='identity', position='stack') +
+  scale_x_discrete(limits=c('No', 'Yes')) +
+  labs(title = "Opinions on Gun Control in America", 
+       subtitle = '2016 GSS Data', 
+       x = 'Gun Owner',
+       y = 'Frequency (in 10 thousands)', 
+       fill = 'Favor or Oppose Gun Permits') + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+
+```{r}
+# Computations for 
+
+data.bar <- GSS2016.recoded %>%
+    drop_na(owngun, gunlaw) %>%
+    filter(owngun != 'Refused') %>%
+    group_by(owngun) %>%
+    count(gunlaw) %>%
+    select(owngun, gunlaw, n)
+
+data.bar
+```
+
+```{r}
+# Bar chart
+
+ggplot(data = data.bar, aes(x = owngun, y = n, fill = fct_rev(gunlaw))) + 
+  geom_bar(stat='identity', position='stack') +
+  scale_x_discrete(limits=c('No', 'Yes')) +
+  labs(title = "Opinions on Gun Control in America", 
+       subtitle = '2016 GSS Data', 
+       x = 'Gun Owner',
+       y = 'Frequency (in 10 thousands)', 
+       fill = 'Favor or Oppose Gun Permits') + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+# Mosaic Plot
+```{r}
+data.mosaic <- GSS2016.recoded %>%
+  filter(owngun != 'Refused') %>%
+  mutate(owngun = fct_rev(owngun)) %>%
+  droplevels()
+  
+mosaic(gunlaw ~ owngun, data = data.mosaic, 
+       main = 'Opinions on Gun Control in America', 
+       labeling_args = list(set_varnames = c(owngun = 'Possession of Gun', 
+                                             gunlaw = 'Favor or Oppose Gun Permits')))
+```
+
