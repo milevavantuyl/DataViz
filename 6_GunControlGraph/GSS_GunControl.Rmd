@@ -24,7 +24,7 @@ dim(GSS2016)
 ```
 
 # Processing and Analysis
-An analysis of gun ownership and support for background checks when purchasing guns in response to Hillary Clinton's faulty venn diagram from 2016 on gun control ![](https://www.washingtonpost.com/news/the-fix/wp/2016/05/20/we-fixed-hillary-clintons-terrible-venn-diagram-on-gun-control/). 
+An analysis of gun ownership and support for background checks when purchasing guns in response to Hillary Clinton's faulty venn diagram from 2016 on gun control (https://www.washingtonpost.com/news/the-fix/wp/2016/05/20/we-fixed-hillary-clintons-terrible-venn-diagram-on-gun-control/). 
 
 The 2016 General Social Survey contains data on gun control opinions in America. 
 1. Variable: owngun. Question phrasing: "Do you happen to have in your home (or garage) any guns or 
@@ -104,15 +104,16 @@ data.bar
 ```
 
 ```{r}
-# Bar chart
+# Bar chart of conditional probabiliies
 
 ggplot(data = data.bar, aes(x = owngun, y = prop, fill = fct_rev(gunlaw))) + 
   geom_bar(stat='identity', position='stack') +
   scale_x_discrete(limits=c('No', 'Yes')) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) +
   labs(title = "Opinions on Gun Control in America", 
        subtitle = '2016 GSS Data', 
        x = 'Gun Owner',
-       y = 'Frequency (in 10 thousands)', 
+       y = 'Percentage (%)', 
        fill = 'Favor or Oppose Gun Permits') + 
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5), 
@@ -121,7 +122,7 @@ ggplot(data = data.bar, aes(x = owngun, y = prop, fill = fct_rev(gunlaw))) +
 
 
 ```{r}
-# Computations for 
+# Computations for counts
 
 data.bar <- GSS2016.recoded %>%
     drop_na(owngun, gunlaw) %>%
@@ -134,15 +135,16 @@ data.bar
 ```
 
 ```{r}
-# Bar chart
+# Bar chart of counts per gun ownership group
 
 ggplot(data = data.bar, aes(x = owngun, y = n, fill = fct_rev(gunlaw))) + 
   geom_bar(stat='identity', position='stack') +
   scale_x_discrete(limits=c('No', 'Yes')) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) +
   labs(title = "Opinions on Gun Control in America", 
        subtitle = '2016 GSS Data', 
        x = 'Gun Owner',
-       y = 'Frequency (in 10 thousands)', 
+       y = 'Count', 
        fill = 'Favor or Oppose Gun Permits') + 
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5), 
