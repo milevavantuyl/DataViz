@@ -10,3 +10,4 @@
 4. An initial analysis of employment trends among New College of Florida alumni
 5. An interactive scatter plot illustrating the relationship between shark tooth size and shark size
 6. A response to Hillary Clinton's 2016 tweet on gun control
+7. A shiny web application for studying trends in life expectancy and fertility rate using World Bank Open Data 
