@@ -12,13 +12,13 @@ navbarPage("GAPMINDER",
         sidebarLayout(
             sidebarPanel(
                 # Sidebar panel, insert sidebar selectors here
-                uiOutput("regionselector"), 
-                uiOutput("countryselector"), 
-                uiOutput("yearselector")
+                uiOutput("regionselector"),
+                uiOutput("countryselector")
+                # uiOutput("yearselector")
             ), 
             mainPanel(
                 # Main panel, insert scatter plot here
-                plotlyOutput("scatterplot")
+                # plotlyOutput("scatterplot")
             )
         )
     ),
