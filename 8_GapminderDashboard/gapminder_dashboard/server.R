@@ -79,39 +79,43 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  # observeEvent(list(input$regionselector, input$yearselector), {
-  # output$scatterplot <- renderPlotly({
-  #   
-  #   # Selected year
-  #   year <- input$yearselector
-  #   print(year)
-  #   
-  #   # Processing data
-  #   dataplot <- df() %>% 
-  #     filter(Year == year) %>% 
-  #     filter(Region == input$regionselector)
-  #   
-  #   # create plotly plot
-  #   scatterplot <- plot_ly(data = dataplot,
-  #     type = 'scatter', 
-  #     mode = 'markers',
-  #     x = ~Fertility, 
-  #     y = ~LifeExpectancy, 
-  #     color = ~Region, 
-  #     size = ~Population, 
-  #     text = paste0("<b>Country:</b> ", dataplot$Country, "<br>", 
-  #       "<b>Region:</b> ", dataplot$Region, "<br>", 
-  #       "<b>Fertility:</b> ", dataplot$Fertility, "<br>", 
-  #       "<b>Life Expectancy:</b> ", dataplot$LifeExpectancy, "<br>", 
-  #       "<b>Population:</b> ", dataplot$Population, "<br>"), 
-  #     hoverinfo = 'text') %>%
-  #     layout(
-  #       title = list(text = paste0("Life Expectancy vs. Fertility in ", year), xref = "paper"),
-  #       xaxis = list(title = "Fertility \n (Births per Women)"), 
-  #       yaxis = list(title = "Life Expectancy (Years)"), 
-  #       legend = list(title = list(text = "Region"))) %>%
-  #     config(displayModeBar = F)
-  # })})
+  observeEvent(list(input$regionselector, input$yearselector), {
+    output$scatterplot <- renderPlotly({
+  
+      # Processing data
+      dataplot <- df() %>% drop_na()
+      
+      if (input$regionselector != "All Regions"){
+        dataplot <- df() %>% filter(Region == input$regionselector)
+      }
+
+      # create base plot
+      base <- plot_ly(data = dataplot,
+        x = ~Fertility,
+        y = ~LifeExpectancy,
+        size = ~Population,
+        color = ~Region,
+        frame = ~Year,
+        text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
+          "<b>Region:</b> ", dataplot$Region, "<br>",
+          "<b>Fertility:</b> ", dataplot$Fertility, "<br>",
+          "<b>Life Expectancy:</b> ", dataplot$LifeExpectancy, "<br>",
+          "<b>Population:</b> ", dataplot$Population, "<br>"),
+        hoverinfo = 'text',
+        type = 'scatter',
+        mode = 'markers')
+      
+      # Add animations and labels to scatterplot 
+      scatterplot <- base %>%
+          layout(
+            title = list(text = "Life Expectancy vs. Fertility", xref = "paper"),
+            xaxis = list(title = "Fertility \n (Births per Women)"),
+            yaxis = list(title = "Life Expectancy (Years)"),
+            legend = list(title = list(text = "Region"))) %>%
+          config(displayModeBar = F) %>%
+          animation_opts(500, redraw = FALSE)
+    })
+  })
   
   # modify this based on user selections
   output$mydata <- renderTable({df()})

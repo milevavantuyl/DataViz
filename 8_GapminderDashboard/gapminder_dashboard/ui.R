@@ -18,7 +18,7 @@ navbarPage("GAPMINDER",
             ), 
             mainPanel(
                 # Main panel, insert scatter plot here
-                # plotlyOutput("scatterplot")
+                plotlyOutput("scatterplot")
             )
         )
     ),
