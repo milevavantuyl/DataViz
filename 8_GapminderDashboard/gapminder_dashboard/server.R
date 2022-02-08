@@ -8,6 +8,7 @@ library(shinydashboard)
 library(readr)
 library(tidyr)
 library(plotly)
+library(data.table)
 
 shinyServer(function(input, output, session) {
   
@@ -16,7 +17,7 @@ shinyServer(function(input, output, session) {
     intervalMillis = 30000,
     session = session,
     filePath = './data/WorldBankData.csv',
-    readFunc = read_csv
+    readFunc = fread
   )
   
   # Create "Region" dropdown UI component
@@ -59,7 +60,7 @@ shinyServer(function(input, output, session) {
         selectInput(
           "countryselector",
           "Select a Country",
-          choices = countries
+          choices = c('All Countries in Region', countries)
         )
       }
       
@@ -79,21 +80,30 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  observeEvent(list(input$regionselector, input$yearselector), {
+  observeEvent(list(input$regionselector, input$countryselector), {
     output$scatterplot <- renderPlotly({
   
       # Processing data
+      
+      # Data for all countries 
       dataplot <- df() %>% drop_na()
       
-      if (input$regionselector != "All Regions"){
+      # Data for all countries in a given region
+      if (!is.null(input$regionselector) && input$regionselector != "All Regions"){
         dataplot <- df() %>% filter(Region == input$regionselector)
       }
 
+      # Data for a single country within the specified region
+      if (!is.null(input$countryselector) && input$countryselector != "All Countries in Region"){
+        dataplot <- dataplot %>% filter(Country == input$countryselector)
+      }
+      
       # create base plot
       base <- plot_ly(data = dataplot,
         x = ~Fertility,
         y = ~LifeExpectancy,
         size = ~Population,
+        # color = ~df()$Region %>% unique(),
         color = ~Region,
         frame = ~Year,
         text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
