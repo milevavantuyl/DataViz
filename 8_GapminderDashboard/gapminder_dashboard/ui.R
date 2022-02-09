@@ -27,15 +27,30 @@ navbarPage("GAPMINDER",
     
     # "Data tab"
     tabPanel("Data", 
-        sidebarPanel(), 
+        sidebarPanel(
+            selectInput(
+                "regionselector2",
+                "Select a Region",
+                choices = NULL),
+            uiOutput("countryselector2"),
+            checkboxInput('displayyear', 'Filter by year?', value = FALSE),
+            conditionalPanel(
+                condition = "input.displayyear == true", 
+                uiOutput("yearselector2")
+            ),
+            checkboxGroupInput(
+                "columnselector", 
+                "Columns to Display", 
+                choices = NULL
+            )
+        ), 
         mainPanel(
             # Main panel, insert data table here
             fluidRow(
                 box(width = 12, 
                     title = "Data", 
                     solidHeader = TRUE, 
-                    footer = "Read File (non-reactive)", 
-                    tableOutput("mydata")
+                    DTOutput("mydata")
                     )
             )
         )

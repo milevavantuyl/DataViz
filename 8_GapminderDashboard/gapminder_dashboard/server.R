@@ -9,12 +9,16 @@ library(readr)
 library(tidyr)
 library(plotly)
 library(data.table)
+library(DT)
 
 df <- fread('./data/WorldBankData.csv')
 shinyServer(function(input, output, session) {
   
   ## Populate "Region" dropdown UI component
   updateSelectInput(session, 'regionselector', choices = c("All Regions", sort(unique(df$Region))))
+  updateSelectInput(session, 'regionselector2', choices = c("All Regions", sort(unique(df$Region))))
+  
+  updateCheckboxGroupInput(session, 'columnselector', choices = names(df), selected = names(df))
   
   ## Create "Country" dropdown UI component based on the selected "Region" 
   observeEvent(list(input$regionselector), {
@@ -70,7 +74,7 @@ shinyServer(function(input, output, session) {
       if (!is.null(input$countryselector) && input$countryselector != "All Countries in Region"){
         dataplot <- dataplot %>% filter(Country == input$countryselector)
       }
-      
+
       # create base plot
       base <- plot_ly(data = dataplot,
         x = ~Fertility,
@@ -87,23 +91,92 @@ shinyServer(function(input, output, session) {
         hoverinfo = 'text',
         type = 'scatter',
         mode = 'markers')
-      
-      # Add animations and labels to scatterplot 
+
+      # Add animations and labels to scatterplot
       scatterplot <- base %>%
           layout(
             title = list(text = "Life Expectancy vs. Fertility", xref = "paper"),
             xaxis = list(title = "Fertility \n (Births per Women)"),
             yaxis = list(title = "Life Expectancy (Years)"),
-            legend = list(title = list(text = "Region")), 
+            legend = list(title = list(text = "Region")),
             showlegend = TRUE) %>%
           config(displayModeBar = F) %>%
           animation_opts(500, redraw = FALSE)
-      
+
       return (scatterplot)
     })
   })
   
+  ## Create "Country" dropdown UI component based on the selected "Region" 
+  observeEvent(list(input$regionselector2), {
+    
+    # Render dropdown for "Country"
+    output$countryselector2 <- renderUI({
+      
+      # When region = null (occurs at outset), countryselector is not created
+      # When region != null, generate the "country" dropdown
+      if (!is.null(input$regionselector2)) {
+        
+        # Obtain a list of countries based on "Region" selector
+        if (input$regionselector2 == "All Regions"){
+          countries <-
+            df %>%
+            select(Country) %>%
+            distinct() %>%
+            arrange(Country) # Alphabetical order
+        } else {
+          countries <-
+            df %>%
+            filter(Region == input$regionselector2) %>%
+            select(Country) %>%
+            distinct() %>%
+            arrange(Country) # Alphabetical order
+        }
+        
+        # Populate "country" dropdown UI component
+        selectInput(
+          "countryselector2",
+          "Select a Country",
+          choices = c('All Countries in Region', countries)
+        )
+      }
+    })
+    
+  })
+  
+  # "Year" slider UI component
+  output$yearselector2 <- renderUI({
+    sliderInput("yearselector2",
+      "Year",
+      min = min(df$Year),
+      max = max(df$Year),
+      value = 2000,
+      step = 1,
+      sep = '',
+    )
+  })
+  
   # modify this based on user selections
-  output$mydata <- renderTable({df})
+  output$mydata <- renderDT({
+    data <- as.data.frame(df)
+
+    # Data for all countries in a given region
+    if (!is.null(input$regionselector2) && input$regionselector2 != "All Regions"){
+      data <- data %>% filter(Region == input$regionselector2)
+    }
+    
+    # Data for a single country within the specified region
+    if (!is.null(input$countryselector2) && input$countryselector2 != "All Countries in Region"){
+      data <- data %>% filter(Country == input$countryselector2)
+    }
+    
+    # Data for a single year
+    if (input$displayyear && !is.null(input$yearselector2)){
+      data <- data %>% filter(Year == input$yearselector2)
+    }
+    
+    datatable(data[, input$columnselector])
+    
+    })
   
 })
