@@ -12,9 +12,11 @@ navbarPage("GAPMINDER",
         sidebarLayout(
             sidebarPanel(
                 # Sidebar panel, insert sidebar selectors here
-                uiOutput("regionselector"),
+                selectInput(
+                    "regionselector",
+                    "Select a Region",
+                    choices = NULL),
                 uiOutput("countryselector")
-                # uiOutput("yearselector")
             ), 
             mainPanel(
                 # Main panel, insert scatter plot here
