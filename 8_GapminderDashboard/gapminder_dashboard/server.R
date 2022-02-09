@@ -76,9 +76,9 @@ shinyServer(function(input, output, session) {
         x = ~Fertility,
         y = ~LifeExpectancy,
         size = ~Population,
-        # color = ~df()$Region %>% unique(),
         color = ~Region,
         frame = ~Year,
+        opacity = 0.9,
         text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
           "<b>Region:</b> ", dataplot$Region, "<br>",
           "<b>Fertility:</b> ", dataplot$Fertility, "<br>",
@@ -94,9 +94,12 @@ shinyServer(function(input, output, session) {
             title = list(text = "Life Expectancy vs. Fertility", xref = "paper"),
             xaxis = list(title = "Fertility \n (Births per Women)"),
             yaxis = list(title = "Life Expectancy (Years)"),
-            legend = list(title = list(text = "Region"))) %>%
+            legend = list(title = list(text = "Region")), 
+            showlegend = TRUE) %>%
           config(displayModeBar = F) %>%
           animation_opts(500, redraw = FALSE)
+      
+      return (scatterplot)
     })
   })
   
