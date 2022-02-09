@@ -5,6 +5,7 @@
 library(shiny)
 library(shinydashboard)
 library(plotly)
+library(DT)
 
 navbarPage("GAPMINDER", 
     # "Plot tab"
