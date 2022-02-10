@@ -1,4 +1,4 @@
-# server.R for a Gapminder-style dashboard of fertitlity and life expectancy
+# server.R for a Gapminder-style app of fertility and life expectancy
 # Author: Mileva Van Tuyl
 # Version 1.0, 1/29/22
 
@@ -11,16 +11,27 @@ library(plotly)
 library(data.table)
 library(DT)
 
+# Read data
 df <- fread('./data/WorldBankData.csv')
+
 shinyServer(function(input, output, session) {
   
-  ## Populate "Region" dropdown UI component
-  updateSelectInput(session, 'regionselector', choices = c("All Regions", sort(unique(df$Region))))
-  updateSelectInput(session, 'regionselector2', choices = c("All Regions", sort(unique(df$Region))))
+  ## Update UI components (for Plot and Data tabs)
+  updateSelectInput(session, 
+    'regionselector', 
+    choices = c("All Regions", sort(unique(df$Region))))
   
-  updateCheckboxGroupInput(session, 'columnselector', choices = names(df), selected = names(df))
+  updateSelectInput(session, 
+    'regionselector2', 
+    choices = c("All Regions", sort(unique(df$Region))))
   
-  ## Create "Country" dropdown UI component based on the selected "Region" 
+  updateCheckboxGroupInput(session, 
+    'columnselector', 
+    choices = names(df), 
+    selected = names(df))
+  
+  
+  ## Create "Country" UI component based on the selected "Region" for the plot tab
   observeEvent(list(input$regionselector), {
 
     # Render dropdown for "Country"
@@ -30,7 +41,7 @@ shinyServer(function(input, output, session) {
       # When region != null, generate the "country" dropdown
       if (!is.null(input$regionselector)) {
   
-        # Obtain a list of countries based on "Region" selector
+        # All Regions is selected: display a list of all countries 
         if (input$regionselector == "All Regions"){
           countries <-
             df %>%
@@ -38,6 +49,7 @@ shinyServer(function(input, output, session) {
             distinct() %>%
             arrange(Country) # Alphabetical order
         } else {
+          # A specific region is selected: displays the countries in that region
           countries <-
             df %>%
             filter(Region == input$regionselector) %>%
@@ -53,12 +65,10 @@ shinyServer(function(input, output, session) {
           choices = c('All Countries in Region', countries)
         )
       }
-      
     })
-    
   })
   
-  ## Create the scatterplot. It will update if regionselector or countryselector is modified
+  ## Scatter plot
   observeEvent(list(input$regionselector, input$countryselector), {
     output$scatterplot <- renderPlotly({
       
@@ -70,7 +80,7 @@ shinyServer(function(input, output, session) {
         dataplot <- df %>% filter(Region == input$regionselector)
       }
 
-      # Data for a single country within the specified region
+      # Data for a single country 
       if (!is.null(input$countryselector) && input$countryselector != "All Countries in Region"){
         dataplot <- dataplot %>% filter(Country == input$countryselector)
       }
@@ -80,18 +90,18 @@ shinyServer(function(input, output, session) {
         x = ~Fertility,
         y = ~LifeExpectancy,
         size = ~Population,
-        color = ~Region,
+        color = ~Region, 
+        opacity = 0.8,
         frame = ~Year,
-        opacity = 0.9,
         text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
           "<b>Region:</b> ", dataplot$Region, "<br>",
           "<b>Fertility:</b> ", dataplot$Fertility, "<br>",
           "<b>Life Expectancy:</b> ", dataplot$LifeExpectancy, "<br>",
           "<b>Population:</b> ", dataplot$Population, "<br>"),
         hoverinfo = 'text',
-        type = 'scatter',
-        mode = 'markers')
-
+        type = 'scatter', 
+        mode = 'markers'
+        )
       # Add animations and labels to scatterplot
       scatterplot <- base %>%
           layout(
@@ -106,6 +116,7 @@ shinyServer(function(input, output, session) {
       return (scatterplot)
     })
   })
+  
   
   ## Create "Country" dropdown UI component based on the selected "Region" 
   observeEvent(list(input$regionselector2), {
@@ -123,7 +134,7 @@ shinyServer(function(input, output, session) {
             df %>%
             select(Country) %>%
             distinct() %>%
-            arrange(Country) # Alphabetical order
+            arrange(Country)
         } else {
           countries <-
             df %>%
@@ -156,7 +167,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  # modify this based on user selections
+  # Data table
   output$mydata <- renderDT({
     data <- as.data.frame(df)
 
@@ -175,8 +186,7 @@ shinyServer(function(input, output, session) {
       data <- data %>% filter(Year == input$yearselector2)
     }
     
+    # Display selected columns
     datatable(data[, input$columnselector])
-    
     })
-  
 })

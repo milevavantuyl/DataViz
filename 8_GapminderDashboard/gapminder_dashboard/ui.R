@@ -1,4 +1,4 @@
-# ui.R for a Gapminder-style dashboard of fertitlity and life expectancy
+# ui.R for a Gapminder-style application of fertility and life expectancy
 # Author: Mileva Van Tuyl
 # Version 1.0, 1/29/22
 
@@ -12,7 +12,7 @@ navbarPage("GAPMINDER",
     tabPanel("Plot", 
         sidebarLayout(
             sidebarPanel(
-                # Sidebar panel, insert sidebar selectors here
+                # Sidebar panel with sidebar selectors 
                 selectInput(
                     "regionselector",
                     "Select a Region",
@@ -20,7 +20,7 @@ navbarPage("GAPMINDER",
                 uiOutput("countryselector")
             ), 
             mainPanel(
-                # Main panel, insert scatter plot here
+                # Main panel with scatter plot 
                 plotlyOutput("scatterplot")
             )
         )
@@ -29,12 +29,15 @@ navbarPage("GAPMINDER",
     # "Data tab"
     tabPanel("Data", 
         sidebarPanel(
+            # Sidebar panel with  selectors 
             selectInput(
                 "regionselector2",
                 "Select a Region",
                 choices = NULL),
             uiOutput("countryselector2"),
-            checkboxInput('displayyear', 'Filter by year?', value = FALSE),
+            checkboxInput('displayyear', 
+                'Filter by year?', 
+                value = FALSE),
             conditionalPanel(
                 condition = "input.displayyear == true", 
                 uiOutput("yearselector2")
@@ -46,7 +49,7 @@ navbarPage("GAPMINDER",
             )
         ), 
         mainPanel(
-            # Main panel, insert data table here
+            # Main panel with data table 
             fluidRow(
                 box(width = 12, 
                     title = "Data", 
