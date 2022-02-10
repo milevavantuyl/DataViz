@@ -5,9 +5,9 @@ account: mvantuyl
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5603049
-bundleId: 5562747
+bundleId: 5566693
 url: https://mvantuyl.shinyapps.io/gapminder_dashboard/
-when: 1644442966.10334
-lastSyncTime: 1644442966.10336
+when: 1644533961.32216
+lastSyncTime: 1644533961.32217
 asMultiple: FALSE
 asStatic: FALSE
