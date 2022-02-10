@@ -91,7 +91,7 @@ shinyServer(function(input, output, session) {
         y = ~LifeExpectancy,
         size = ~Population,
         color = ~Region, 
-        opacity = 0.8,
+        opacity = 0.95,
         frame = ~Year,
         text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
           "<b>Region:</b> ", dataplot$Region, "<br>",
