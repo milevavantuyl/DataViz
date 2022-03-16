@@ -1,0 +1,91 @@
+---
+title: "Data Processing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(MMWRweek)
+library(ggplot2)
+library(plotly)
+library(data.table)
+```
+
+```{r cars}
+df_raw_vaccination <- read.csv('https://data.cdc.gov/resource/3rge-nu2a.csv')
+df_raw_booster <- read.csv('https://data.cdc.gov/resource/d6p8-wqjm.csv')
+```
+
+Join the ones that are just vaccinated with those with the booster 
+
+```{r}
+df_preprocessed <- df_raw_booster %>% select('outcome', 'mmwr_week', 'age_group', 'vaccine_product', 'boosted_with_outcome', 'boosted_population', 'vaccinated_with_outcome', 'fully_vaccinated_population', 'unvaccinated_with_outcome', 'unvaccinated_population') %>%
+   mutate(date = MMWRweek2Date(as.numeric(substr(mmwr_week, 1, 4)), as.numeric(substr(mmwr_week, 5, 6)))) %>%
+   mutate(boosted_percentage = boosted_with_outcome/boosted_population * 100) %>%
+   mutate(vaccinated_percentage = vaccinated_with_outcome/fully_vaccinated_population * 100) %>%
+   mutate(unvaccinated_percentage = unvaccinated_with_outcome/unvaccinated_population * 100)
+```
+
+```{r}
+# 
+df_preprocessed_long <- as.data.table(df_preprocessed) %>% 
+   melt(id.vars = c('outcome', 'mmwr_week', 'date', 'age_group', 'vaccine_product'), 
+      measure.vars = c('boosted_percentage', 'vaccinated_percentage', 'unvaccinated_percentage'), 
+      variable.name = 'vaccine_status', 
+      value.name = 'perc_outcome_by_vacc')
+```
+
+```{r}
+df_preprocessed_long2 <- as.data.table(df_preprocessed) %>% 
+   melt(id.vars = c('outcome', 'mmwr_week', 'date', 'age_group', 'vaccine_product'), 
+      measure.vars = c('boosted_population', 'fully_vaccinated_population', 'unvaccinated_percentage'), 
+      variable.name = 'vaccine_status', 
+      value.name = 'population')
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(babynames)
+library(viridis)
+# library(hrbrthemes)
+library(plotly)
+```
+
+```{r}
+dataplot <- df_preprocessed %>% filter(vaccine_product == 'all_types' & age_group == 'all_ages')
+
+p <- dataplot %>%
+   ggplot(aes (x = date, y = boosted_with_outcome, color = outcome)) + 
+   geom_smooth()
+
+p
+
+```
+
+
+
+```{r}
+dataplot <- df_preprocessed_long %>% filter(outcome == 'case' & vaccine_product == 'all_types' & age_group == 'all_ages')
+ggplot(data = dataplot) + geom_line(mapping = aes(x = date, y = perc_outcome_by_vacc, color = vaccine_status))
+```
+
+```{r}
+dataplot <- df_preprocessed_long %>% filter(outcome == 'case' & vaccine_product == 'all_types' & age_group == 'all_ages')
+
+p <- ggplot(data = dataplot, aes(x = date, y = perc_outcome_by_vacc, fill = vaccine_status)) + geom_area() + theme(legend.position="none") 
+p
+
+
+```
+
+
+
+```{r}
+dataplot <- df_preprocessed_long2 %>% filter(outcome == 'case' & vaccine_product == 'all_types' & age_group == 'all_ages')
+ggplot(data = dataplot) + geom_line(mapping = aes(x = date, y = population, color = vaccine_status))
+```

@@ -1,0 +1,163 @@
+---
+title: "preprocessing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(data.table)
+library(plotly)
+```
+
+# For "all states"
+```{r}
+# raw_data <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv')
+raw_data <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us.csv')
+str(raw_data)
+```
+
+```{r}
+summary(raw_data)
+table(is.na(raw_data))
+table(is.infinite(as.vector(t(raw_data))))
+```
+
+```{r}
+# Set ylim to be positive
+p <- plot_ly(data = raw_data, 
+   type = 'bar',
+   marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
+   opacity = 0.6, 
+   x = ~date, 
+   y = ~cases)
+
+p %>% add_trace(
+   x = ~date, 
+   y = ~cases_avg,
+   type = 'scatter', 
+   mode = 'lines',
+   opacity = 1.0, 
+   line = list(color = 'darkcyan'),
+   marker = list(color = 'darkcyan', opacity = 0))
+```
+
+```{r}
+# Set ylim to be positive
+p <- plot_ly(data = raw_data, 
+   type = 'bar',
+   marker = list(color = 'darkred', line = list(color = 'white', width = 0.2)),
+   opacity = 0.6, 
+   x = ~date, 
+   y = ~deaths)
+
+p %>% add_trace(
+   x = ~date, 
+   y = ~deaths_avg,
+   type = 'scatter', 
+   mode = 'lines',
+   opacity = 1.0, 
+   line = list(color = 'darkred'),
+   marker = list(color = 'darkred', opacity = 0))
+```
+
+# For single state
+```{r}
+state_df <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us-states.csv')
+```
+
+```{r}
+str(state_df)
+```
+
+```{r}
+dataplot <- state_df %>% filter(state == 'Washington')
+
+# Set ylim to be positive
+p <- plot_ly(data = dataplot, 
+   type = 'bar',
+   marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
+   opacity = 0.6, 
+   x = ~date, 
+   y = ~cases)
+
+p <- p %>% add_trace(
+   x = ~date, 
+   y = ~cases_avg,
+   type = 'scatter', 
+   mode = 'lines',
+   opacity = 1.0, 
+   line = list(color = 'darkcyan'),
+   marker = list(color = 'darkcyan', opacity = 0))
+
+p
+```
+
+```{r}
+
+dataplot <- state_df %>% filter(state == 'Washington')
+
+p <- plot_ly(data = dataplot, 
+   type = 'bar',
+   marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
+   opacity = 0.6, 
+   x = ~date, 
+   y = ~cases, 
+   name = "Daily Cases")
+
+p <- p %>% add_trace(
+   x = ~date, 
+   y = ~cases_avg,
+   type = 'scatter', 
+   mode = 'lines',
+   opacity = 1.0, 
+   line = list(color = 'darkcyan'),
+   marker = list(color = 'darkcyan', opacity = 0), 
+   name = "7-Day Avg.")
+
+p <- p %>%
+  layout(xaxis = list(title = 'Date',
+                      zerolinecolor = 'black',
+                      zerolinewidth = 2),
+         yaxis = list(title = 'Cases'),
+         title = 'Frequency of Cases')
+
+p <- p %>%
+  layout(hovermode="x unified",
+         width = 900)
+
+p
+```
+
+
+```{r}
+# all states
+```
+
+
+# TBD below here
+
+
+
+```{r}
+vaccination_data <- read.csv('https://data.cdc.gov/resource/unsk-b7fc.csv')
+summary(as.IDate(vaccination_data$date))
+# vaccination_data <- read.csv('~/Downloads/COVID-19_Vaccinations_in_the_United_States_Jurisdiction.csv')
+```
+
+```{r}
+dataplot <- vaccination_data %>% group_by(date) %>% summarise(total_distributed = sum(distributed))
+```
+
+```{r}
+p <- plot_ly(data = dataplot, 
+   type = 'scatter',
+   mode = 'lines',
+   x = ~date, 
+   y = ~total_distributed)
+
+p
+```
+

@@ -1,0 +1,14 @@
+name: CovidDashboard
+title: CovidDashboard
+username:
+account: mvantuyl
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5868807
+bundleId: 5692463
+url: https://mvantuyl.shinyapps.io/CovidDashboard/
+when: 1647454434.50291
+lastSyncTime: 1647454434.50292
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: preprocessing.Rmd
