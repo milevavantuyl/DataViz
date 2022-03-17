@@ -5,10 +5,8 @@ library(DT)
 library(data.table)
 library(readr)
 
-# HIGH: 3 info boxes with statistics (days since first case, total cases, total deaths, cases/ deaths in past 24hrs)
-# MEDIUM: Add a second tab with the data
-# MEDIUM-LOW: Add a third tab (should really be the second) with vaccination data. Percent vaccinated. Efficacy. And info boxes.
-# LOW: Change results based on state selected
+# High: 3 info boxes with statistics (days since first case, total cases, total deaths, cases/ deaths in past 24hrs)
+# Medium: Change results based on state selected
 
 shinyServer(function(input, output, session) {
     
@@ -16,11 +14,11 @@ shinyServer(function(input, output, session) {
         intervalMillis = 20000, 
         session = session, 
         filePath = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us.csv',
-        # filePath = './us.csv',
         readFunc = fread)
         
     output$mydata <- renderDataTable({us_df()}, 
-        options = list(paging = FALSE))
+        options = list(pageLength = 10, info = FALSE,
+            lengthMenu = list(c(10, 25, 50, -1), c("10", "25", "50", "All")) ) )
     
     output$casesPlot <- renderPlotly({
         dataplot <- us_df()
