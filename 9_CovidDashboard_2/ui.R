@@ -25,13 +25,11 @@ dashboardPage(
         # Top row
         fluidRow(
             # First box with plot of cases or deaths over time
-            box(width = 12, 
-                status = "info",
-                title = "", 
-                solidHeader = TRUE, 
-                plotlyOutput("myplot"))
-                # div(style = 'overflow-x: scroll', plotlyOutput("myplot")))
-                # plotlyOutput("myplot")) # Fill in Cases or Deaths based on user input
+            tabBox(
+                width = 12, 
+                id = "tab_plots",
+                tabPanel("Cases", plotlyOutput("cases_plot")), 
+                tabPanel("Deaths", plotlyOutput("deaths_plot")))
             # box(width = 6,
             #     status = "warning",
             #     height = "600",
