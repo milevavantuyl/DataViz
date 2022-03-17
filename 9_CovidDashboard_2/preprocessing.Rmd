@@ -100,6 +100,15 @@ p <- p %>%
 p
 ```
 
+```{r}
+# Total number of cases in thousand
+format(round(sum(raw_data$cases) / 1e3,0), big.mark=",")
+```
+
+```{r}
+# Total number of deaths in thousand
+format(round(sum(raw_data$deaths) / 1e3,0), big.mark=",")
+```
 
 
 ## Initial drafts 

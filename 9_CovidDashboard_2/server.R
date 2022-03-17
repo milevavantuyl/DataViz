@@ -5,8 +5,8 @@ library(DT)
 library(data.table)
 library(readr)
 
-# High: 3 info boxes with statistics (days since first case, total cases, total deaths, cases/ deaths in past 24hrs)
 # Medium: Change results based on state selected
+# Medium: Tidy up code
 
 shinyServer(function(input, output, session) {
     
@@ -97,11 +97,42 @@ shinyServer(function(input, output, session) {
         now <- as.IDate(Sys.Date())
         days <- now - firstCase
     
-        valueBox (
-            value = days, 
-            subtitle = paste("days since first case in the U.S."), 
-            icon = icon("calendar")
+        infoBox (
+            title = "days since first case", 
+            value = days,
+            icon = icon("calendar"), 
+            color = 'purple'
         )
     })
+    
+    output$numCases <- renderInfoBox({
+        
+        totalCases <- sum(us_df()$cases)
+        formatted_value <- format(round(totalCases,0), big.mark=",") # in thousands
+        
+        infoBox (
+            title = "Total Cases", 
+            value = formatted_value,
+            icon = icon("head-side-cough"), 
+            color = "orange"
+        )
+    })
+    
+    output$numDeaths <- renderInfoBox({
+        
+        totalCases <- sum(us_df()$deaths)
+        formatted_value <- format(round(totalCases,0), big.mark=",") # in thousands
+        
+        infoBox (
+            title = "Total Deaths",
+            value = formatted_value,
+            icon = icon("virus"), 
+            color = "red"
+
+
+        )
+    })
+    
+    
     
 })

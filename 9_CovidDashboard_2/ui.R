@@ -13,11 +13,11 @@ dashboardPage(
             menuItem("Data", tabName = "data", icon = icon("table"))
         ),
         # dashboard components
-        selectInput('state', 
-                    'State of Interest', 
-                    choices = NULL, 
-                    selected = 'All States' 
-                    ),
+        # selectInput('state', 
+        #             'State of Interest', 
+        #             choices = NULL, 
+        #             selected = 'All States' 
+        #             ),
         collapsed = TRUE
     ), 
     dashboardBody(
@@ -27,6 +27,12 @@ dashboardPage(
                 
                 # Top row
                 fluidRow(
+                    infoBoxOutput(width = 4, "numDays"), # Can only display a value and text
+                    infoBoxOutput(width = 4, "numCases"), 
+                    infoBoxOutput(width = 4, "numDeaths"), 
+                    
+                ),
+                fluidRow(
                     # First box with plot of cases or deaths over time
                     tabBox(
                         width = 12, 
@@ -34,22 +40,17 @@ dashboardPage(
                         tabPanel("Cases", plotlyOutput("casesPlot")), 
                         tabPanel("Deaths", plotlyOutput("deathsPlot")))
                 ),
-                fluidRow(
-                    valueBoxOutput(width = 4, "numDays"), # Can only display a value and text
-                    infoBoxOutput(width = 4, "ncol"), 
-                    infoBoxOutput(width = 4, "nrecords")
-                )
-                
+
+    
             ), 
             
             # Data Tab
             tabItem(tabName = "data", 
-                fillPage(
+                fluidRow(
                     box(width = 12, 
                         status = "warning",
                         title = "Cases and Deaths",
                         solidHeader = TRUE,
-                        height = 650,
                         footer = "Data from The New York Times, based on reports from state and local health agencies.",
                         column(width = 12, DT::dataTableOutput("mydata"),style = "height:495px; overflow-y: scroll;overflow-x: scroll;")
                     )
