@@ -22,7 +22,7 @@ shinyServer(function(input, output, session) {
     output$mydata <- renderDataTable({us_df()}, 
         options = list(paging = FALSE))
     
-    output$cases_plot <- renderPlotly({
+    output$casesPlot <- renderPlotly({
         dataplot <- us_df()
         
         p <- plot_ly(data = dataplot, 
@@ -48,7 +48,7 @@ shinyServer(function(input, output, session) {
                 zerolinecolor = 'black',
                 zerolinewidth = 2),
                 yaxis = list(title = 'Cases'),
-                title = 'Frequency of Cases')
+                title = 'New Reported Cases')
         
         p <- p %>%
             layout(hovermode="x unified", 
@@ -57,7 +57,7 @@ shinyServer(function(input, output, session) {
         return(p)
     })
     
-    output$deaths_plot <- renderPlotly({
+    output$deathsPlot <- renderPlotly({
         
     dataplot <- us_df()
         
@@ -84,13 +84,26 @@ shinyServer(function(input, output, session) {
             zerolinecolor = 'black',
             zerolinewidth = 2),
             yaxis = list(title = 'Deaths'),
-            title = 'Frequency of Deaths')
+            title = 'New Reported Deaths')
     
     p <- p %>%
         layout(hovermode="x unified", 
                yaxis = list(rangemode = 'nonnegative'))
     
     return(p)
+    })
+    
+    output$numDays <- renderValueBox({
+        
+        firstCase <- as.IDate('2020-01-21')
+        now <- as.IDate(Sys.Date())
+        days <- now - firstCase
+    
+        valueBox (
+            value = days, 
+            subtitle = paste("days since first case in the U.S."), 
+            icon = icon("calendar")
+        )
     })
     
 })

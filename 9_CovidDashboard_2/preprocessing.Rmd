@@ -26,24 +26,44 @@ table(is.infinite(as.vector(t(raw_data))))
 ```
 
 ```{r}
-# Set ylim to be positive
+first_case = as.IDate('2020-01-21')
+now = as.IDate(Sys.Date())
+now - first_case
+```
+
+# Final Cases Plot
+```{r}
 p <- plot_ly(data = raw_data, 
    type = 'bar',
    marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
    opacity = 0.6, 
    x = ~date, 
-   y = ~cases)
+   y = ~cases, 
+   name = "Daily Cases")
 
-p %>% add_trace(
+p <- p %>% add_trace(
    x = ~date, 
    y = ~cases_avg,
    type = 'scatter', 
    mode = 'lines',
    opacity = 1.0, 
    line = list(color = 'darkcyan'),
-   marker = list(color = 'darkcyan', opacity = 0))
-```
+   marker = list(color = 'darkcyan', opacity = 0), 
+   name = "7-Day Avg.")
 
+p <- p %>%
+  layout(xaxis = list(title = 'Date',
+                      zerolinecolor = 'black',
+                      zerolinewidth = 2),
+         yaxis = list(title = 'Cases'),
+         title = 'Frequency of Cases')
+
+p <- p %>%
+  layout(hovermode="x unified",
+         width = 900)
+
+p
+```
 
 # FINAL DEATHS PLOT
 
@@ -80,6 +100,28 @@ p <- p %>%
 p
 ```
 
+
+
+## Initial drafts 
+```{r}
+# Set ylim to be positive
+p <- plot_ly(data = raw_data, 
+   type = 'bar',
+   marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
+   opacity = 0.6, 
+   x = ~date, 
+   y = ~cases)
+
+p %>% add_trace(
+   x = ~date, 
+   y = ~cases_avg,
+   type = 'scatter', 
+   mode = 'lines',
+   opacity = 1.0, 
+   line = list(color = 'darkcyan'),
+   marker = list(color = 'darkcyan', opacity = 0))
+```
+
 # For single state
 ```{r}
 state_df <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us-states.csv')
@@ -89,30 +131,6 @@ state_df <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/maste
 str(state_df)
 ```
 
-```{r}
-dataplot <- state_df %>% filter(state == 'Washington')
-
-# Set ylim to be positive
-p <- plot_ly(data = dataplot, 
-   type = 'bar',
-   marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
-   opacity = 0.6, 
-   x = ~date, 
-   y = ~cases)
-
-p <- p %>% add_trace(
-   x = ~date, 
-   y = ~cases_avg,
-   type = 'scatter', 
-   mode = 'lines',
-   opacity = 1.0, 
-   line = list(color = 'darkcyan'),
-   marker = list(color = 'darkcyan', opacity = 0))
-
-p
-```
-
-# FINAL CASES PLOT
 ```{r}
 
 dataplot <- state_df %>% filter(state == 'Washington')
@@ -149,10 +167,6 @@ p <- p %>%
 p
 ```
 
-
-```{r}
-# all states
-```
 
 
 # TBD below here

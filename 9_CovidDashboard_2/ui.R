@@ -6,7 +6,7 @@ library(data.table)
 library(readr)
 
 dashboardPage(
-    dashboardHeader(title = 'Covid Tracker'), 
+    dashboardHeader(title = 'US Covid Tracker'), 
     dashboardSidebar(
         # dashboard components
         radioButtons('outcome', 
@@ -27,9 +27,9 @@ dashboardPage(
             # First box with plot of cases or deaths over time
             tabBox(
                 width = 12, 
-                id = "tab_plots",
-                tabPanel("Cases", plotlyOutput("cases_plot")), 
-                tabPanel("Deaths", plotlyOutput("deaths_plot")))
+                id = "tabPlots",
+                tabPanel("Cases", plotlyOutput("casesPlot")), 
+                tabPanel("Deaths", plotlyOutput("deathsPlot")))
             # box(width = 6,
             #     status = "warning",
             #     height = "600",
@@ -40,7 +40,7 @@ dashboardPage(
             # )
         ),
         fluidRow(
-            valueBoxOutput(width = 4, "nrows"), # Can only display a value and text
+            valueBoxOutput(width = 4, "numDays"), # Can only display a value and text
             infoBoxOutput(width = 4, "ncol"), 
             infoBoxOutput(width = 4, "nrecords")
         )
