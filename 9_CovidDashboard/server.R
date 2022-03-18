@@ -1,133 +1,133 @@
-# server.R for a Gapminder-style dashboard of fertitlity and life expectancy
-# Author: Mileva Van Tuyl
-# Version 1.0, 1/29/22
-
 library(shiny)
 library(shinydashboard)
-
-library(readr)
-library(tidyr)
-library(plotly)
+library(ggplot2)
+library(DT)
 library(data.table)
+library(readr)
 
 shinyServer(function(input, output, session) {
     
-    # Read data
-    df <- reactiveFileReader(
-        intervalMillis = 30000,
-        session = session,
-        filePath = 'https://data.cdc.gov/resource/d6p8-wqjm.csv',
-        readFunc = fread
-    )
-    # 
-    # # Create "Region" dropdown UI component
-    # output$regionselector <- renderUI({
-    #     regions <- unique(df()$Region)
-    #     selectInput(
-    #         "regionselector",
-    #         "Select a Region",
-    #         choices = c("All Regions", sort(regions))
-    #     )
-    # })
-    # 
-    # # Create "Country" dropdown UI component based on the selected "Region" 
-    # observeEvent(list(input$regionselector), {
-    #     # Debugging, input region
-    #     print(input$regionselector)
-    #     
-    #     # Render dropdown for "Country"
-    #     output$countryselector <- renderUI({
-    #         
-    #         # If region = null (occurs at outset), countryselector is not created
-    #         if (!is.null(input$regionselector)) {
-    #             
-    #             # Obtain a list of countries based on "Region" selector
-    #             if (input$regionselector == "All Regions"){
-    #                 countries <-
-    #                     df() %>%
-    #                     select(Country) %>%
-    #                     distinct() %>%
-    #                     arrange(Country)
-    #             } else {
-    #                 countries <-
-    #                     df() %>%
-    #                     filter(Region == input$regionselector) %>%
-    #                     select(Country) %>%
-    #                     distinct() %>%
-    #                     arrange(Country)
-    #             }
-    #             
-    #             selectInput(
-    #                 "countryselector",
-    #                 "Select a Country",
-    #                 choices = c('All Countries in Region', countries)
-    #             )
-    #         }
-    #         
-    #     })
-    #     
-    #     # "Year" slider UI component
-    #     output$yearselector <- renderUI({
-    #         sliderInput("yearselector",
-    #             "Year",
-    #             min = min(df()$Year),
-    #             max = max(df()$Year),
-    #             value = 2000,
-    #             step = 1,
-    #             sep = '',
-    #             animate = animationOptions(interval = 1000)
-    #         )
-    #     })
-    # })
-    # 
-    # observeEvent(list(input$regionselector, input$countryselector), {
-    #     output$scatterplot <- renderPlotly({
-    #         
-    #         # Processing data
-    #         
-    #         # Data for all countries 
-    #         dataplot <- df() %>% drop_na()
-    #         
-    #         # Data for all countries in a given region
-    #         if (!is.null(input$regionselector) && input$regionselector != "All Regions"){
-    #             dataplot <- df() %>% filter(Region == input$regionselector)
-    #         }
-    #         
-    #         # Data for a single country within the specified region
-    #         if (!is.null(input$countryselector) && input$countryselector != "All Countries in Region"){
-    #             dataplot <- dataplot %>% filter(Country == input$countryselector)
-    #         }
-    #         
-    #         # create base plot
-    #         base <- plot_ly(data = dataplot,
-    #             x = ~Fertility,
-    #             y = ~LifeExpectancy,
-    #             size = ~Population,
-    #             # color = ~df()$Region %>% unique(),
-    #             color = ~Region,
-    #             frame = ~Year,
-    #             text = paste0("<b>Country:</b> ", dataplot$Country, "<br>",
-    #                 "<b>Region:</b> ", dataplot$Region, "<br>",
-    #                 "<b>Fertility:</b> ", dataplot$Fertility, "<br>",
-    #                 "<b>Life Expectancy:</b> ", dataplot$LifeExpectancy, "<br>",
-    #                 "<b>Population:</b> ", dataplot$Population, "<br>"),
-    #             hoverinfo = 'text',
-    #             type = 'scatter',
-    #             mode = 'markers')
-    #         
-    #         # Add animations and labels to scatterplot 
-    #         scatterplot <- base %>%
-    #             layout(
-    #                 title = list(text = "Life Expectancy vs. Fertility", xref = "paper"),
-    #                 xaxis = list(title = "Fertility \n (Births per Women)"),
-    #                 yaxis = list(title = "Life Expectancy (Years)"),
-    #                 legend = list(title = list(text = "Region"))) %>%
-    #             config(displayModeBar = F) %>%
-    #             animation_opts(500, redraw = FALSE)
-    #     })
-    # })
+    # Read NYTimes data 
+    us_df <- reactiveFileReader(
+        intervalMillis = 20000, 
+        session = session, 
+        filePath = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us.csv',
+        readFunc = fread)
+        
+    # Data as a paginated data table
+    output$mydata <- renderDataTable({us_df()}, 
+        options = list(pageLength = 10, info = FALSE,
+            lengthMenu = list(c(10, 25, 50, -1), c("10", "25", "50", "All")) ) )
     
-    # modify this based on user selections
-    output$mydata <- renderTable({df()})
+    # Time series plot of COVID cases in the US
+    output$casesPlot <- renderPlotly({
+        dataplot <- us_df()
+        
+        p <- plot_ly(data = dataplot, 
+            type = 'bar',
+            marker = list(color = 'darkcyan', line = list(color = 'white', width = 0.2)),
+            opacity = 0.6, 
+            x = ~date, 
+            y = ~cases, 
+            name = "Daily Cases")
+        
+        p <- p %>% add_trace(
+            x = ~date, 
+            y = ~cases_avg,
+            type = 'scatter', 
+            mode = 'lines',
+            opacity = 1.0, 
+            line = list(color = 'darkcyan'),
+            marker = list(color = 'darkcyan', opacity = 0), 
+            name = "7-Day Avg")
+        
+        p <- p %>%
+            layout(xaxis = list(title = 'Date',
+                zerolinecolor = 'black',
+                zerolinewidth = 2),
+                yaxis = list(title = 'Cases'),
+                title = 'New Reported Cases')
+        
+        p <- p %>%
+            layout(hovermode="x unified", 
+                    yaxis = list(rangemode = 'nonnegative'))
+        
+        return(p)
+    })
     
+    # Time series plot of COVID deaths in the US
+    output$deathsPlot <- renderPlotly({
+       dataplot <- us_df()
+           
+       p <- plot_ly(data = dataplot, 
+           type = 'bar',
+           marker = list(color = 'darkred', line = list(color = 'white', width = 0.2)),
+           opacity = 0.6, 
+           x = ~date, 
+           y = ~deaths, 
+           name = "Daily Deaths")
+       
+       p <- p %>% add_trace(
+           x = ~date, 
+           y = ~deaths_avg,
+           type = 'scatter', 
+           mode = 'lines',
+           opacity = 1.0, 
+           line = list(color = 'darkred'),
+           marker = list(color = 'darkred', opacity = 0), 
+           name = "7-Day Avg")
+       
+       p <- p %>%
+           layout(xaxis = list(title = 'Date',
+               zerolinecolor = 'black',
+               zerolinewidth = 2),
+               yaxis = list(title = 'Deaths'),
+               title = 'New Reported Deaths')
+       
+       p <- p %>%
+           layout(hovermode="x unified", 
+                  yaxis = list(rangemode = 'nonnegative'))
+       
+       return(p)
+    })
+    
+    # Info box: number of days since the first COVID case in the US
+    output$numDays <- renderValueBox({
+        firstCase <- as.IDate('2020-01-21')
+        now <- as.IDate(Sys.Date())
+        days <- now - firstCase
+    
+        infoBox (
+            title = "days since first case", 
+            value = days,
+            icon = icon("calendar"), 
+            color = 'purple'
+        )
+    })
+    
+    # Info box: total number of COVID cases in the US
+    output$numCases <- renderInfoBox({
+        totalCases <- sum(us_df()$cases)
+        formatted_value <- format(round(totalCases,0), big.mark=",") # in thousands
+        
+        infoBox (
+            title = "Total Cases", 
+            value = formatted_value,
+            icon = icon("head-side-cough"), 
+            color = "orange"
+        )
+    })
+    
+    # Info box: total number of COVID deaths in the US
+    output$numDeaths <- renderInfoBox({
+        totalDeaths <- sum(us_df()$deaths)
+        formatted_value <- format(round(totalDeaths,0), big.mark=",") # in thousands
+        
+        infoBox (
+            title = "Total Deaths",
+            value = formatted_value,
+            icon = icon("virus"), 
+            color = "red"
+        )
+    })
 })

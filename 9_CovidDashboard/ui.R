@@ -1,39 +1,58 @@
-# ui.R for a Gapminder-style dashboard of fertitlity and life expectancy
-# Author: Mileva Van Tuyl
-# Version 1.0, 1/29/22
-
 library(shiny)
 library(shinydashboard)
 library(plotly)
+library(DT)
+library(data.table)
+library(readr)
 
-navbarPage("GAPMINDER", 
-    # "Plot tab"
-    tabPanel("Plot", 
-        sidebarLayout(
-            sidebarPanel(
-                # Sidebar panel, insert sidebar selectors here
-                uiOutput("regionselector"),
-                uiOutput("countryselector")
-                # uiOutput("yearselector")
-            ), 
-            mainPanel(
-                # Main panel, insert scatter plot here
-                plotlyOutput("scatterplot")
-            )
-        )
-    ),
+dashboardPage(
+    dashboardHeader(title = 'COVID-19 Tracker, USA'), 
     
-    # "Data tab"
-    tabPanel("Data", 
-        sidebarPanel(), 
-        mainPanel(
-            # Main panel, insert data table here
-            fluidRow(
-                box(width = 12, 
-                    title = "Data", 
-                    solidHeader = TRUE, 
-                    footer = "Read File (non-reactive)", 
-                    tableOutput("mydata")
+    # Sidebar
+    dashboardSidebar(
+        sidebarMenu(
+            menuItem("Dashboard", tabName = "dashboard", icon = icon("chart-line")), 
+            menuItem("Data", tabName = "data", icon = icon("table"))
+        ),
+        collapsed = TRUE
+    ), 
+   
+    # Body
+    dashboardBody(
+        tabItems(
+            # Dashboard Tab
+            tabItem(tabName = "dashboard", 
+                
+                # Top row - InfoBoxes
+                fluidRow(
+                    infoBoxOutput(width = 4, "numDays"), 
+                    infoBoxOutput(width = 4, "numCases"), 
+                    infoBoxOutput(width = 4, "numDeaths"), 
+                    
+                ),
+               
+                # Second row - plot of cases and deaths over time
+                fluidRow(
+                    tabBox(
+                        width = 12, 
+                        id = "tabPlots",
+                        tabPanel("Cases", plotlyOutput("casesPlot")), 
+                        tabPanel("Deaths", plotlyOutput("deathsPlot")))
+                ),
+            ), 
+            
+            # Data Tab
+            tabItem(tabName = "data", 
+                fluidRow(
+                    box(width = 12, 
+                        status = "warning",
+                        title = "Cases and Deaths",
+                        solidHeader = TRUE,
+                        footer = "Data from The New York Times, based on reports from state and local health agencies.",
+                        column(width = 12, 
+                           DT::dataTableOutput("mydata"),
+                           style = "height:495px; overflow-y: scroll;overflow-x: scroll;")
+                    )
                 )
             )
         )
