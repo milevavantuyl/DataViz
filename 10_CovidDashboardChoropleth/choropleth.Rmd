@@ -1,0 +1,124 @@
+---
+title: "choropleth_map"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages
+```{r}
+library(data.table)
+library(plotly)
+library(tidyverse)
+library(covidcast) # population data from 2019
+```
+
+# County-level Covid-19 data from NYTimes
+```{r}
+county_data <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv')
+str(county_data)
+```
+
+# Aggregate county-level Covid-19 data
+Total number of cases per county (across all dates)  
+Alternatively, we could just get the number of cases from the most recent day, from the most recent week, most recent month, etc. 
+```{r}
+county_data %>% group_by(fips) %>% mutate(total_cases = sum(cases))
+```
+```{r}
+dataplot <- county_data %>% group_by(fips) %>% summarise(total_cases = sum(cases), total_deaths = sum(deaths))
+```
+
+# Most recent date
+```{r}
+max(county_data$date)
+```
+
+```{r}
+FILTER_DATE = max(county_data$date)
+dataplot_filter_by_date <- county_data %>% filter(date == FILTER_DATE) %>% select(date, fips, cases, deaths)
+dataplot_filter_by_date
+```
+
+
+# Example chorpleth map on plotly
+```{r}
+library(plotly)
+library(rjson)
+
+url <- 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
+counties <- rjson::fromJSON(file=url)
+url2<- "https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv"
+df <- read.csv(url2, colClasses=c(fips="character"))
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+fig <- plot_ly()
+fig <- fig %>% add_trace(
+    type="choropleth",
+    geojson=counties,
+    locations=df$fips,
+    z=df$unemp,
+    colorscale="Viridis",
+    zmin=0,
+    zmax=12,
+    marker=list(line=list(
+      width=0)
+    )
+  )
+fig <- fig %>% colorbar(title = "Unemployment Rate (%)")
+fig <- fig %>% layout(
+    title = "2016 US Unemployment by County"
+)
+
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+
+```
+# Covid-19 Chloropleth Map
+```{r}
+library(plotly)
+library(rjson)
+
+url <- 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
+counties <- rjson::fromJSON(file=url)
+# url2<- "https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv"
+# df <- read.csv(url2, colClasses=c(fips="character"))
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+fig <- plot_ly()
+fig <- fig %>% add_trace(
+    type="choropleth",
+    geojson=counties,
+    locations=dataplot_filter_by_date$fips,
+    z=dataplot_filter_by_date$cases,
+    colorscale="Viridis",
+    marker=list(line=list(
+      width=0)
+    )
+  )
+fig <- fig %>% colorbar(title = "Total Cases")
+fig <- fig %>% layout(
+    title = "COVID-19 Cases by County"
+)
+
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+
+```
+

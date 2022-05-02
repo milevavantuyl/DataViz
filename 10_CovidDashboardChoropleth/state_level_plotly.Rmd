@@ -1,0 +1,83 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(data.table)
+library(plotly)
+library(tidyverse)
+library(tidycensus) # population data from 2019
+```
+
+# Covid State data
+```{r}
+state_data <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
+str(state_data)
+```
+## Covidcast state-level population data
+```{r}
+library(covidcast)
+str(state_census)
+```
+# Data Preparation
+
+```{r}
+# Single date - most recent
+FILTER_DATE = max(state_data$date)
+
+# Filter data
+state_data_filtered <- state_data %>% 
+   filter(date == FILTER_DATE) %>% 
+   select(date, state, fips, cases, deaths) 
+
+# Join on fips to get covid and population data
+state_pop_data <- left_join(state_data_filtered,state_census, by=c("fips"="STATE")) %>%
+   select(date, state, fips, cases, deaths, POPESTIMATE2019)
+
+# cases and deaths per 10k people
+state_dataplot <- state_pop_data %>% 
+   mutate(state.abbreviation = state.abb[match(state,state.name)]) %>%
+   mutate(cases.per10000 = cases/ POPESTIMATE2019 * 10000) %>% 
+   mutate(deaths.per10000 = deaths/ POPESTIMATE2019 * 10000) %>%
+   select(fips, state.abbreviation, cases.per10000, deaths.per10000) 
+state_dataplot
+
+```
+# Plotly choropleth
+```{r}
+library(plotly)
+df <- state_dataplot
+
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 10)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- fig %>% add_trace(
+    type="choropleth",
+    locations=df$state.abbreviation,
+    z=df$cases.per10000,
+    colorscale="Hot",
+    reversescale = TRUE,
+    marker=list(line=list(
+      width=0)
+    )
+  )
+# fig <- fig %>% colorbar(title = "Millions USD")
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+```
+
