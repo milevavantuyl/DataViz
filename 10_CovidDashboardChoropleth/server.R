@@ -91,6 +91,42 @@ shinyServer(function(input, output, session) {
         return(p)
     })
     
+    # Time series plot of COVID deaths in the US
+    output$deathsPlot2 <- renderPlotly({
+        dataplot <- us_df()
+        
+        p <- plot_ly(data = dataplot, 
+            type = 'bar',
+            marker = list(color = 'darkred', line = list(color = 'white', width = 0.2)),
+            opacity = 0.6, 
+            x = ~date, 
+            y = ~deaths, 
+            name = "Daily Deaths")
+        
+        p <- p %>% add_trace(
+            x = ~date, 
+            y = ~deaths_avg,
+            type = 'scatter', 
+            mode = 'lines',
+            opacity = 1.0, 
+            line = list(color = 'darkred'),
+            marker = list(color = 'darkred', opacity = 0), 
+            name = "7-Day Avg")
+        
+        p <- p %>%
+            layout(xaxis = list(title = 'Date',
+                zerolinecolor = 'black',
+                zerolinewidth = 2),
+                yaxis = list(title = 'Deaths'),
+                title = 'New Reported Deaths')
+        
+        p <- p %>%
+            layout(hovermode="x unified", 
+                yaxis = list(rangemode = 'nonnegative'))
+        
+        return(p)
+    })
+    
     # Info box: number of days since the first COVID case in the US
     output$numDays <- renderValueBox({
         firstCase <- as.IDate('2020-01-21')

@@ -12,6 +12,7 @@ dashboardPage(
     dashboardSidebar(
         sidebarMenu(
             menuItem("Dashboard", tabName = "dashboard", icon = icon("chart-line")), 
+            menuItem("Map", tabName = "map", icon = icon("map")), 
             menuItem("Data", tabName = "data", icon = icon("table"))
         ),
         collapsed = TRUE
@@ -41,6 +42,18 @@ dashboardPage(
                 ),
             ), 
             
+            # Map Tab
+            tabItem(tabName = "map", 
+                
+                # Second row - plot of cases and deaths over time
+                fluidRow(
+                    tabBox(
+                        width = 12, 
+                        id = "mapPlots",
+                        tabPanel("Deaths", plotlyOutput("deathsPlot2")))
+                ),
+            ), 
+
             # Data Tab
             tabItem(tabName = "data", 
                 fluidRow(

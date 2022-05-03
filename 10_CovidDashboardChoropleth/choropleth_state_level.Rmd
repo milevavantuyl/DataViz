@@ -1,0 +1,101 @@
+---
+title: "Choropleth State Level"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(data.table)
+library(plotly)
+library(tidyverse)
+library(covidcast) # To get 2019 state population data
+```
+
+# Data
+
+## Read Data
+```{r}
+# Covid-19 NYT data
+state_covid <- fread('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
+str(state_covid)
+
+# 2019 State Census Population data
+state_pop_2019 <- state_census %>% select(STATE, NAME, POPESTIMATE2019)
+str(state_pop_2019)
+```
+# State COVID data
+
+Prepare data by extracting month and year
+```{r}
+state_covid_prepared <- state_covid %>%
+   mutate(month = month(date)) %>%
+   mutate(year = year(date))
+state_covid_prepared
+```
+Aggregate to get monthly covid counts
+```{r}
+state_covid_monthly <- state_covid_prepared %>%
+   group_by(fips, month, year) %>% 
+   summarize(monthly_cases=sum(cases), monthly_deaths = sum(deaths))
+state_covid_monthly
+```
+
+
+# Join and prepare data
+Combine monthly covid and population data
+```{r}
+state_data <- left_join(state_covid_monthly, state_pop_2019, by = c("fips"="STATE"), keep = FALSE)
+state_data
+```
+## Prepare data
+```{r}
+state_data_prepared <- state_data %>%
+   mutate(monthly_cases_per10000= monthly_cases/POPESTIMATE2019 * 10000) %>%
+   mutate(monthly_deaths_per10000 = monthly_deaths/POPESTIMATE2019 * 10000) %>%
+   mutate(state.abbreviation = state.abb[match(NAME,state.name)])
+state_data_prepared
+```
+# Plotting
+
+```{r}
+state_dataplot <- state_data_prepared %>% filter(month == 1 & year == 2021)
+state_dataplot
+```
+
+```{r}
+df <- state_dataplot
+
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 10)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- fig %>% add_trace(
+    type="choropleth",
+    locations=df$state.abbreviation,
+    z=df$monthly_cases_per10000,
+    color = df$monthly_cases_per10000,
+    colorscale="Viridis",
+    marker=list(line=list(
+      color = 'black',
+      width=0.5)
+    )
+  )
+fig <- fig %>% colorbar(title = "Monthly Cases per 10000")
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+```
+
+
