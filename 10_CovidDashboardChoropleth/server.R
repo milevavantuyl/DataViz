@@ -4,15 +4,53 @@ library(ggplot2)
 library(DT)
 library(data.table)
 library(readr)
+library(tidyverse)
+library(covidcast)
+library(lubridate)
+
+state_pop_2019 <- state_census %>% 
+    select(STATE, NAME, POPESTIMATE2019)
 
 shinyServer(function(input, output, session) {
     
-    # Read NYTimes data 
+    # Read NYTimes US-level data 
     us_df <- reactiveFileReader(
         intervalMillis = 20000, 
         session = session, 
         filePath = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/rolling-averages/us.csv',
         readFunc = fread)
+    
+    # Read NYTimes state-level covid data
+    state_covid <- reactiveFileReader(
+        intervalMillis = 20000, 
+        session = session, 
+        filePath = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv',
+        readFunc = fread)
+    
+    # Prepare state-level covid data, aggregating by month
+    state_covid_prepared <- reactive({
+        state_covid() %>%
+            mutate(month_year = floor_date(as_date(date), "month")) %>%
+            group_by(fips, month_year) %>% 
+            summarise(monthly_cases=sum(cases), monthly_deaths = sum(deaths), .groups = "keep")
+    })
+    
+    # All state level data for plotting
+    state_data_prepared <- reactive({
+        left_join(state_covid_prepared(), 
+                state_pop_2019, 
+                by = c("fips"="STATE"), 
+                keep = FALSE) %>%
+        mutate(monthly_cases_per10000= monthly_cases/POPESTIMATE2019 * 10000) %>%
+        mutate(monthly_deaths_per10000 = monthly_deaths/POPESTIMATE2019 * 10000) %>%
+        mutate(state.abbreviation = state.abb[match(NAME,state.name)]) %>%
+        select(fips, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
+    })
+    
+    # State level data as a paginated data table
+    output$prepareddata <- renderDataTable({state_covid()}, 
+        options = list(pageLength = 10, info = FALSE,
+            lengthMenu = list(c(10, 25, 50, -1), c("10", "25", "50", "All")) ) )
     
     # Data as a paginated data table
     output$mydata <- renderDataTable({us_df()}, 
@@ -125,6 +163,83 @@ shinyServer(function(input, output, session) {
                 yaxis = list(rangemode = 'nonnegative'))
         
         return(p)
+    })
+    
+    # Map of Covid cases in the US 
+    output$casesMap <- renderPlotly({
+        
+        # Filter for most recent month
+        CURRENT_MONTH <- max(state_data_prepared()$month_year)
+        state_dataplot <- state_data_prepared() %>% 
+            filter(month_year == CURRENT_MONTH)
+        
+        df <- state_dataplot
+        
+        # specify some map projection/options
+        g <- list(
+            scope = 'usa',
+            projection = list(type = 'albers usa'),
+            showlakes = TRUE,
+            lakecolor = toRGB('white')
+        )
+        
+        fig <- plot_geo(df, locationmode = 'USA-states')
+        fig <- fig %>% add_trace(
+            type="choropleth",
+            locations=df$state.abbreviation,
+            z=df$monthly_cases_per10000,
+            color = df$monthly_cases_per10000,
+            colorscale="Blues",
+            reversescale = TRUE,
+            marker=list(line=list(
+                color = 'black',
+                width=0.5)
+            )
+        )
+        fig <- fig %>% colorbar(title = "Monthly Cases per 10000")
+        fig <- fig %>% layout(
+            geo = g
+        )
+        
+        return(fig)
+    })
+    
+    # Map of Covid deaths in the US 
+    output$deathsMap <- renderPlotly({
+        
+        # Filter for most recent month
+        CURRENT_MONTH <- max(state_data_prepared()$month_year)
+        state_dataplot <- state_data_prepared() %>% 
+            filter(month_year == CURRENT_MONTH)
+        
+        df <- state_dataplot
+        
+        # specify some map projection/options
+        g <- list(
+            scope = 'usa',
+            projection = list(type = 'albers usa'),
+            showlakes = TRUE,
+            lakecolor = toRGB('white')
+        )
+        
+        fig <- plot_geo(df, locationmode = 'USA-states')
+        fig <- fig %>% add_trace(
+            type="choropleth",
+            locations=df$state.abbreviation,
+            z=df$monthly_deaths_per10000,
+            color = df$monthly_deaths_per10000,
+            colorscale="inferno",
+            marker=list(line=list(
+                color = 'black',
+                width=0.5)
+            )
+        )
+        fig <- fig %>% colorbar(title = "Monthly Deaths per 10000")
+        fig <- fig %>% layout(
+            geo = g
+        )
+        
+        return(fig)
     })
     
     # Info box: number of days since the first COVID case in the US

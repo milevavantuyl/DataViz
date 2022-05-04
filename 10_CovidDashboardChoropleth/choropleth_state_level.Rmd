@@ -12,6 +12,7 @@ library(data.table)
 library(plotly)
 library(tidyverse)
 library(covidcast) # To get 2019 state population data
+library(lubridate)
 ```
 
 # Data
@@ -30,15 +31,17 @@ str(state_pop_2019)
 
 Prepare data by extracting month and year
 ```{r}
+# state_covid_prepared <- state_covid %>%
+#    mutate(month = month(date)) %>%
+#    mutate(year = year(date))
 state_covid_prepared <- state_covid %>%
-   mutate(month = month(date)) %>%
-   mutate(year = year(date))
+   mutate(month_year = floor_date(as_date(date), "month"))
 state_covid_prepared
 ```
 Aggregate to get monthly covid counts
 ```{r}
 state_covid_monthly <- state_covid_prepared %>%
-   group_by(fips, month, year) %>% 
+   group_by(fips, month_year) %>% 
    summarize(monthly_cases=sum(cases), monthly_deaths = sum(deaths))
 state_covid_monthly
 ```
@@ -55,21 +58,28 @@ state_data
 state_data_prepared <- state_data %>%
    mutate(monthly_cases_per10000= monthly_cases/POPESTIMATE2019 * 10000) %>%
    mutate(monthly_deaths_per10000 = monthly_deaths/POPESTIMATE2019 * 10000) %>%
-   mutate(state.abbreviation = state.abb[match(NAME,state.name)])
+   mutate(state.abbreviation = state.abb[match(NAME,state.name)]) %>%
+   select(fips, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
 state_data_prepared
 ```
 # Plotting
 
+
 ```{r}
-state_dataplot <- state_data_prepared %>% filter(month == 1 & year == 2021)
+CURRENT_MONTH <- max(state_data_prepared$month_year)
+
+state_dataplot <- state_data_prepared %>% filter(month_year == CURRENT_MONTH)
 state_dataplot
 ```
 
 ```{r}
+
+library("RColorBrewer")
+
 df <- state_dataplot
 
 # give state boundaries a white border
-l <- list(color = toRGB("white"), width = 10)
+# l <- list(color = toRGB("white"), width = 10)
 # specify some map projection/options
 g <- list(
   scope = 'usa',
@@ -84,7 +94,8 @@ fig <- fig %>% add_trace(
     locations=df$state.abbreviation,
     z=df$monthly_cases_per10000,
     color = df$monthly_cases_per10000,
-    colorscale="Viridis",
+    colorscale="Blues",
+    reversescale = TRUE,
     marker=list(line=list(
       color = 'black',
       width=0.5)

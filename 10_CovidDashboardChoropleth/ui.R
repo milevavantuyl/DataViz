@@ -4,6 +4,9 @@ library(plotly)
 library(DT)
 library(data.table)
 library(readr)
+library(tidyverse)
+library(covidcast)
+library(lubridate)
 
 dashboardPage(
     dashboardHeader(title = 'COVID-19 Tracker, USA'), 
@@ -44,14 +47,16 @@ dashboardPage(
             
             # Map Tab
             tabItem(tabName = "map", 
+            
                 
-                # Second row - plot of cases and deaths over time
+                # First row map plots
                 fluidRow(
                     tabBox(
-                        width = 12, 
+                        width = 12,
                         id = "mapPlots",
-                        tabPanel("Deaths", plotlyOutput("deathsPlot2")))
-                ),
+                        tabPanel("Cases", plotlyOutput("casesMap")),
+                        tabPanel("Death", plotlyOutput("deathsMap")))
+                )
             ), 
 
             # Data Tab
@@ -59,14 +64,27 @@ dashboardPage(
                 fluidRow(
                     box(width = 12, 
                         status = "warning",
-                        title = "Cases and Deaths",
+                        title = "Cases and Deaths in the US",
                         solidHeader = TRUE,
                         footer = "Data from The New York Times, based on reports from state and local health agencies.",
                         column(width = 12, 
                             DT::dataTableOutput("mydata"),
                             style = "height:495px; overflow-y: scroll;overflow-x: scroll;")
                     )
-                )
+                ), 
+                
+                # Second row - datatable
+                fluidRow(
+                    box(width = 12, 
+                        status = "warning",
+                        title = "Cases and Deaths by State",
+                        solidHeader = TRUE,
+                        footer = "Data from The New York Times, based on reports from state and local health agencies.",
+                        column(width = 12, 
+                            DT::dataTableOutput("prepareddata"),
+                            style = "height:495px; overflow-y: scroll;overflow-x: scroll;")
+                    )
+                ),
             )
         )
     )
