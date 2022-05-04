@@ -13,4 +13,4 @@
 7. A Shiny application to visualize trends in life expectancy and fertility rate using World Bank Open Data. 
 8. A continuation of the Shiny application to study trends in life expectancy and fertility rate from 1960 to 2017. Click [here](https://mvantuyl.shinyapps.io/gapminder_dashboard/) to try out this Shiny application.
 9. A COVID-19 dashboard of cases and deaths in the US from January 21, 2020 to present. Click [here](https://mvantuyl.shinyapps.io/CovidDashboard/) to try out this Shiny dashboard.
-10. An extension of the COVID-19 dashboard of cases and deaths in the US from January 21, 2020 to present. This extension includes an additional tab to display the COVID-19 data spatially. 
+10. An extension of the COVID-19 dashboard of cases and deaths in the US from January 21, 2020 to present. This extension includes an additional tab to display the COVID-19 data spatially. Click [here](https://mvantuyl.shinyapps.io/CovidDashboardMap/) to try out this Shiny dashboard.

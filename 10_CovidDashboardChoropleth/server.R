@@ -8,6 +8,7 @@ library(tidyverse)
 library(covidcast)
 library(lubridate)
 
+# 2019 population data from census
 state_pop_2019 <- state_census %>% 
     select(STATE, NAME, POPESTIMATE2019)
 
@@ -47,40 +48,15 @@ shinyServer(function(input, output, session) {
         select(fips, NAME, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
     })
     
-    state_dataplot <- reactive({
-        state_data_prepared()
-    })
-    
-    output$datevalue <- renderText({ strftime(floor_date(input$dateselector, "month")) })
-    
+    # Render slider input from dates in data
     output$dateselector <- renderUI({
         sliderInput("dateselector", 
-            "Date:", 
+            "Month:", 
             min = min(state_data_prepared()$month_year), 
             max = max(state_data_prepared()$month_year), 
             value = max(state_data_prepared()$month_year), 
             timeFormat = "%b %Y")
     })
-    # updateSliderInput(session, 
-    #     "dateselector2", 
-    #     "Date:", 
-    #     min = as.Date("2020-01-01", "%Y-%m-%d"),
-    #     max = as.Date("2022-05-01", "%Y-%m-%d"),
-    #     value = as.Date("2022-05-01"), 
-    #     timeFormat = "%b %Y")
-    # 
-    # sliderMonth <- reactiveValues()
-    # observe({
-    #     full.date <- as.POSIXct(input$dateselector, tz="GMT")
-    #     sliderMonth$Month <- as.character(monthStart(full.date))
-    # })
-    # output$SliderText <- renderText({sliderMonth$Month})
-
-    
-    # updateSliderInput(session,
-    #     'dateselector',
-    #     min = min(state_data_prepared()$month_year),
-    #     max = max(state_data_prepared()$month_year))
     
     # State level data as a paginated data table
     output$prepareddata <- renderDataTable({state_covid()}, 
@@ -119,7 +95,7 @@ shinyServer(function(input, output, session) {
                 zerolinecolor = 'black',
                 zerolinewidth = 2),
                 yaxis = list(title = 'Cases'),
-                title = 'New Reported Cases')
+                title = 'New Reported COVID-19 Cases')
         
         p <- p %>%
             layout(hovermode="x unified", 
@@ -155,43 +131,7 @@ shinyServer(function(input, output, session) {
                 zerolinecolor = 'black',
                 zerolinewidth = 2),
                 yaxis = list(title = 'Deaths'),
-                title = 'New Reported Deaths')
-        
-        p <- p %>%
-            layout(hovermode="x unified", 
-                yaxis = list(rangemode = 'nonnegative'))
-        
-        return(p)
-    })
-    
-    # Time series plot of COVID deaths in the US
-    output$deathsPlot2 <- renderPlotly({
-        dataplot <- us_df()
-        
-        p <- plot_ly(data = dataplot, 
-            type = 'bar',
-            marker = list(color = 'darkred', line = list(color = 'white', width = 0.2)),
-            opacity = 0.6, 
-            x = ~date, 
-            y = ~deaths, 
-            name = "Daily Deaths")
-        
-        p <- p %>% add_trace(
-            x = ~date, 
-            y = ~deaths_avg,
-            type = 'scatter', 
-            mode = 'lines',
-            opacity = 1.0, 
-            line = list(color = 'darkred'),
-            marker = list(color = 'darkred', opacity = 0), 
-            name = "7-Day Avg")
-        
-        p <- p %>%
-            layout(xaxis = list(title = 'Date',
-                zerolinecolor = 'black',
-                zerolinewidth = 2),
-                yaxis = list(title = 'Deaths'),
-                title = 'New Reported Deaths')
+                title = 'New Reported COVID-19 Deaths')
         
         p <- p %>%
             layout(hovermode="x unified", 
@@ -203,17 +143,17 @@ shinyServer(function(input, output, session) {
     # Map of Covid cases in the US 
     output$casesMap <- renderPlotly({
         
-        # Filter for most recent month
+        # Gets user selected month
+        # handles case when dateselector is null/ being populated
         if (is.na(input$dateselector)){
             selected_month <- strftime(floor_date(max(state_data_prepared()$month_year)))
         } else {
             selected_month <- strftime(floor_date(input$dateselector, "month"))
         }
         
-        state_dataplot <- state_data_prepared() %>% 
+        # Filter by given month
+        df <- state_data_prepared() %>% 
             filter(month_year == selected_month)
-        
-        df <- state_dataplot
         
         # specify some map projection/options
         g <- list(
@@ -223,14 +163,15 @@ shinyServer(function(input, output, session) {
             lakecolor = toRGB('white')
         )
         
+        # Create choropleth
         fig <- plot_geo(df, locationmode = 'USA-states')
         fig <- fig %>% add_trace(
             type="choropleth",
             text = paste0("<b>State:</b> ", df$NAME, "<br>",
-                "<b>Monthly Cases:</b> ", df$monthly_cases_per10000),
+                "<b>Monthly Cases (per 10000):</b> ", df$monthly_cases_per10000),
             hoverinfo = 'text',
             locations=df$state.abbreviation,
-            z=df$monthly_cases_per10000,
+            z= df$monthly_cases_per10000,
             color = df$monthly_cases_per10000,
             colorscale="Blues",
             reversescale = TRUE,
@@ -239,10 +180,12 @@ shinyServer(function(input, output, session) {
                 width=0.5)
             )
         )
-        fig <- fig %>% colorbar(title = "Monthly Cases per 10000")
+        fig <- fig %>% colorbar(title = "Cases per 10000")
         fig <- fig %>% layout(
-            geo = g
-        )
+            geo = g, 
+            title = "Monthly COVID-19 Cases by State"
+        ) 
+
         
         return(fig)
     })
@@ -250,11 +193,16 @@ shinyServer(function(input, output, session) {
     # Map of Covid deaths in the US 
     output$deathsMap <- renderPlotly({
         
-        selected_month <- strftime(floor_date(input$dateselector, "month"))
-        state_dataplot <- state_data_prepared() %>% 
-            filter(month_year == selected_month)
+        # Gets user selected month
+        # handles case when dateselector is null/ being populated
+        if (is.na(input$dateselector)){
+            selected_month <- strftime(floor_date(max(state_data_prepared()$month_year)))
+        } else {
+            selected_month <- strftime(floor_date(input$dateselector, "month"))
+        }
         
-        df <- state_dataplot
+        df <- state_data_prepared() %>% 
+            filter(month_year == selected_month)
         
         # specify some map projection/options
         g <- list(
@@ -270,7 +218,7 @@ shinyServer(function(input, output, session) {
             locations=df$state.abbreviation,
             z=df$monthly_deaths_per10000,
             text = paste0("<b>State:</b> ", df$NAME, "<br>",
-                "<b>Monthly Deaths:</b> ", df$monthly_deaths_per10000),
+                "<b>Monthly Deaths (per 10000):</b> ", df$monthly_deaths_per10000),
             hoverinfo = 'text',
             color = df$monthly_deaths_per10000,
             colorscale="inferno",
@@ -279,9 +227,10 @@ shinyServer(function(input, output, session) {
                 width=0.5)
             )
         )
-        fig <- fig %>% colorbar(title = "Monthly Deaths per 10000")
+        fig <- fig %>% colorbar(title = "Deaths per 10000")
         fig <- fig %>% layout(
-            geo = g
+            geo = g, 
+            title = "Monthly COVID-19 Deaths by State"
         )
         
         return(fig)

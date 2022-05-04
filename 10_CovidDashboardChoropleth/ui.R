@@ -67,15 +67,8 @@ dashboardPage(
                     box(
                         width = 12, 
                         uiOutput("dateselector")
-                    #     sliderInput("dateselector", 
-                    #         "Date:", 
-                    #         min = as.Date("2020-01-01", "%Y-%m-%d"),
-                    #         max = as.Date("2022-05-01", "%Y-%m-%d"),
-                    #         value = as.Date("2022-05-01"), 
-                    #         timeFormat = "%b %Y")
                     )
-                ), 
-                fluidRow(column(4, verbatimTextOutput("datevalue"))),
+                )
             ), 
 
             # Data Tab
