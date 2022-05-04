@@ -53,6 +53,21 @@ shinyServer(function(input, output, session) {
     
     output$datevalue <- renderText({ strftime(floor_date(input$dateselector, "month")) })
     
+    output$dateselector <- renderUI({
+        sliderInput("dateselector", 
+            "Date:", 
+            min = min(state_data_prepared()$month_year), 
+            max = max(state_data_prepared()$month_year), 
+            value = max(state_data_prepared()$month_year), 
+            timeFormat = "%b %Y")
+    })
+    # updateSliderInput(session, 
+    #     "dateselector2", 
+    #     "Date:", 
+    #     min = as.Date("2020-01-01", "%Y-%m-%d"),
+    #     max = as.Date("2022-05-01", "%Y-%m-%d"),
+    #     value = as.Date("2022-05-01"), 
+    #     timeFormat = "%b %Y")
     # 
     # sliderMonth <- reactiveValues()
     # observe({
@@ -189,7 +204,12 @@ shinyServer(function(input, output, session) {
     output$casesMap <- renderPlotly({
         
         # Filter for most recent month
-        selected_month <- strftime(floor_date(input$dateselector, "month"))
+        if (is.na(input$dateselector)){
+            selected_month <- strftime(floor_date(max(state_data_prepared()$month_year)))
+        } else {
+            selected_month <- strftime(floor_date(input$dateselector, "month"))
+        }
+        
         state_dataplot <- state_data_prepared() %>% 
             filter(month_year == selected_month)
         

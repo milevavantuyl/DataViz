@@ -9,6 +9,7 @@ library(covidcast)
 library(lubridate)
 
 dashboardPage(
+    
     dashboardHeader(title = 'COVID-19 Tracker, USA'), 
     
     # Sidebar
@@ -23,6 +24,13 @@ dashboardPage(
     
     # Body
     dashboardBody(
+        
+        # Suppress red error messages
+        tags$style(type="text/css",
+            ".shiny-output-error { visibility: hidden; }",
+            ".shiny-output-error:before { visibility: hidden; }"
+        ),
+        
         tabItems(
             # Dashboard Tab
             tabItem(tabName = "dashboard", 
@@ -58,12 +66,13 @@ dashboardPage(
                 fluidRow(
                     box(
                         width = 12, 
-                        sliderInput("dateselector", 
-                            "Date:", 
-                            min = as.Date("2020-01-01", "%Y-%m-%d"),
-                            max = as.Date("2022-05-01", "%Y-%m-%d"),
-                            value = as.Date("2022-05-01"), 
-                            timeFormat = "%b %Y")
+                        uiOutput("dateselector")
+                    #     sliderInput("dateselector", 
+                    #         "Date:", 
+                    #         min = as.Date("2020-01-01", "%Y-%m-%d"),
+                    #         max = as.Date("2022-05-01", "%Y-%m-%d"),
+                    #         value = as.Date("2022-05-01"), 
+                    #         timeFormat = "%b %Y")
                     )
                 ), 
                 fluidRow(column(4, verbatimTextOutput("datevalue"))),
