@@ -47,6 +47,26 @@ shinyServer(function(input, output, session) {
         select(fips, NAME, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
     })
     
+    state_dataplot <- reactive({
+        state_data_prepared()
+    })
+    
+    output$datevalue <- renderText({ strftime(floor_date(input$dateselector, "month")) })
+    
+    # 
+    # sliderMonth <- reactiveValues()
+    # observe({
+    #     full.date <- as.POSIXct(input$dateselector, tz="GMT")
+    #     sliderMonth$Month <- as.character(monthStart(full.date))
+    # })
+    # output$SliderText <- renderText({sliderMonth$Month})
+
+    
+    # updateSliderInput(session,
+    #     'dateselector',
+    #     min = min(state_data_prepared()$month_year),
+    #     max = max(state_data_prepared()$month_year))
+    
     # State level data as a paginated data table
     output$prepareddata <- renderDataTable({state_covid()}, 
         options = list(pageLength = 10, info = FALSE,
@@ -169,9 +189,9 @@ shinyServer(function(input, output, session) {
     output$casesMap <- renderPlotly({
         
         # Filter for most recent month
-        CURRENT_MONTH <- max(state_data_prepared()$month_year)
+        selected_month <- strftime(floor_date(input$dateselector, "month"))
         state_dataplot <- state_data_prepared() %>% 
-            filter(month_year == CURRENT_MONTH)
+            filter(month_year == selected_month)
         
         df <- state_dataplot
         
@@ -210,10 +230,9 @@ shinyServer(function(input, output, session) {
     # Map of Covid deaths in the US 
     output$deathsMap <- renderPlotly({
         
-        # Filter for most recent month
-        CURRENT_MONTH <- max(state_data_prepared()$month_year)
+        selected_month <- strftime(floor_date(input$dateselector, "month"))
         state_dataplot <- state_data_prepared() %>% 
-            filter(month_year == CURRENT_MONTH)
+            filter(month_year == selected_month)
         
         df <- state_dataplot
         

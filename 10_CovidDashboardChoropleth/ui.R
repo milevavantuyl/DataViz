@@ -53,9 +53,20 @@ dashboardPage(
                         width = 12,
                         id = "mapPlots",
                         tabPanel("Cases", plotlyOutput("casesMap")),
-                        tabPanel("Death", plotlyOutput("deathsMap")))
+                        tabPanel("Deaths", plotlyOutput("deathsMap")))
+                ),
+                fluidRow(
+                    box(
+                        width = 12, 
+                        sliderInput("dateselector", 
+                            "Date:", 
+                            min = as.Date("2020-01-01", "%Y-%m-%d"),
+                            max = as.Date("2022-05-01", "%Y-%m-%d"),
+                            value = as.Date("2022-05-01"), 
+                            timeFormat = "%b %Y")
+                    )
                 ), 
-                
+                fluidRow(column(4, verbatimTextOutput("datevalue"))),
             ), 
 
             # Data Tab
