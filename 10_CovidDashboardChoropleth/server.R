@@ -41,10 +41,10 @@ shinyServer(function(input, output, session) {
                 state_pop_2019, 
                 by = c("fips"="STATE"), 
                 keep = FALSE) %>%
-        mutate(monthly_cases_per10000= monthly_cases/POPESTIMATE2019 * 10000) %>%
-        mutate(monthly_deaths_per10000 = monthly_deaths/POPESTIMATE2019 * 10000) %>%
+        mutate(monthly_cases_per10000= round(monthly_cases/POPESTIMATE2019 * 10000), 2) %>%
+        mutate(monthly_deaths_per10000 = round(monthly_deaths/POPESTIMATE2019 * 10000), 2) %>%
         mutate(state.abbreviation = state.abb[match(NAME,state.name)]) %>%
-        select(fips, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
+        select(fips, NAME, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
     })
     
     # State level data as a paginated data table
@@ -186,6 +186,9 @@ shinyServer(function(input, output, session) {
         fig <- plot_geo(df, locationmode = 'USA-states')
         fig <- fig %>% add_trace(
             type="choropleth",
+            text = paste0("<b>State:</b> ", df$NAME, "<br>",
+                "<b>Monthly Cases:</b> ", df$monthly_cases_per10000),
+            hoverinfo = 'text',
             locations=df$state.abbreviation,
             z=df$monthly_cases_per10000,
             color = df$monthly_cases_per10000,
@@ -227,6 +230,9 @@ shinyServer(function(input, output, session) {
             type="choropleth",
             locations=df$state.abbreviation,
             z=df$monthly_deaths_per10000,
+            text = paste0("<b>State:</b> ", df$NAME, "<br>",
+                "<b>Monthly Deaths:</b> ", df$monthly_deaths_per10000),
+            hoverinfo = 'text',
             color = df$monthly_deaths_per10000,
             colorscale="inferno",
             marker=list(line=list(

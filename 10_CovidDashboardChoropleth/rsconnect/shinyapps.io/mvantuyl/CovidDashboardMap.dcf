@@ -5,10 +5,10 @@ account: mvantuyl
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6227366
-bundleId: 5866949
+bundleId: 5867025
 url: https://mvantuyl.shinyapps.io/CovidDashboardMap/
-when: 1651628064.27246
-lastSyncTime: 1651628064.27247
+when: 1651630220.76508
+lastSyncTime: 1651630220.7651
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: choropleth copy.Rmd|choropleth_state_level.Rmd|choropleth.Rmd|state_level_plotly.Rmd

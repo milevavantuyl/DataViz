@@ -47,8 +47,6 @@ dashboardPage(
             
             # Map Tab
             tabItem(tabName = "map", 
-            
-                
                 # First row map plots
                 fluidRow(
                     tabBox(
@@ -56,7 +54,8 @@ dashboardPage(
                         id = "mapPlots",
                         tabPanel("Cases", plotlyOutput("casesMap")),
                         tabPanel("Death", plotlyOutput("deathsMap")))
-                )
+                ), 
+                
             ), 
 
             # Data Tab

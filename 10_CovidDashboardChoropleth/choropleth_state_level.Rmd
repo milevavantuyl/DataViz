@@ -56,10 +56,10 @@ state_data
 ## Prepare data
 ```{r}
 state_data_prepared <- state_data %>%
-   mutate(monthly_cases_per10000= monthly_cases/POPESTIMATE2019 * 10000) %>%
-   mutate(monthly_deaths_per10000 = monthly_deaths/POPESTIMATE2019 * 10000) %>%
+   mutate(monthly_cases_per10000= round(monthly_cases/POPESTIMATE2019 * 10000), 2) %>%
+   mutate(monthly_deaths_per10000 = round(monthly_deaths/POPESTIMATE2019 * 10000), 2) %>%
    mutate(state.abbreviation = state.abb[match(NAME,state.name)]) %>%
-   select(fips, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
+   select(fips, NAME, state.abbreviation, month_year, monthly_cases_per10000, monthly_deaths_per10000)
 state_data_prepared
 ```
 # Plotting
@@ -67,8 +67,10 @@ state_data_prepared
 
 ```{r}
 CURRENT_MONTH <- max(state_data_prepared$month_year)
-
 state_dataplot <- state_data_prepared %>% filter(month_year == CURRENT_MONTH)
+
+state_dataplot <- state_data_prepared 
+
 state_dataplot
 ```
 
@@ -91,6 +93,9 @@ g <- list(
 fig <- plot_geo(df, locationmode = 'USA-states')
 fig <- fig %>% add_trace(
     type="choropleth",
+    text = paste0("<b>State:</b> ", df$NAME, "<br>",
+            "<b>Monthly Cases Per 10000:</b> ", df$monthly_cases_per10000),
+    hoverinfo = 'text',
     locations=df$state.abbreviation,
     z=df$monthly_cases_per10000,
     color = df$monthly_cases_per10000,
