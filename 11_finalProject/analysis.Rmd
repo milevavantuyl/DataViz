@@ -1,0 +1,161 @@
+---
+title: ""
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+library(tidyverse)
+```
+
+# Context: May 10, 2022 - Zander Moricz
+![](./news.png){height=50%}
+
+# Google Trend Data
+```{r include = FALSE}
+# Load data from google trends
+timeline_data <- read.csv("./timeline_data.csv")
+map_data <- read.csv("./geoMap_data.csv")
+```
+
+Interest in the query "Don't Say Gay Bill" and "Zander Moricz" from March 2021 to present
+```{r echo=FALSE, warning=FALSE}
+# process time series data
+timeline_data_processed <- timeline_data %>%
+   select(-c("Parental.Rights.in.Education.bill...United.States.")) %>%
+   rename( dont_say_gay_bill = dont.say.gay.bill...United.States., 
+   zander_moricz = zander.moricz...United.States.) %>%
+   mutate(Week = as.Date(Week, format='%m/%d/%y')) %>%
+   mutate(dont_say_gay_bill = as.numeric(dont_say_gay_bill))%>%
+   mutate(zander_moricz = as.numeric(zander_moricz))
+
+# All NA values correspond to Interest "<1"
+timeline_data_processed[is.na(timeline_data_processed)] = 0
+
+head(timeline_data_processed)
+```
+
+```{r echo=FALSE}
+# Convert time series data from long to wide
+timeline_long <- timeline_data_processed %>%
+   reshape(idvar="Week",
+            varying=c("dont_say_gay_bill","zander_moricz"),
+            v.name=c("value"),
+            new.row.names = 1:1000,
+            times=c("dont_say_gay_bill","zander_moricz"),
+            direction="long") %>% 
+   rename(query = time) %>%
+   rename(Interest = value)
+
+head(timeline_long)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(plotly)
+
+fig <- plot_ly(data = timeline_long, x = ~Week, y = ~Interest, color = ~query, type = "scatter", mode = "lines+markers", width=1000, height=500)
+fig <- fig %>% layout(title = 'Interest in Queries throughout USA')
+fig
+
+```
+
+```{r echo=FALSE, warning=FALSE}
+map_data_processed <- map_data %>%
+   rename( dont_say_gay_bill = dont.say.gay.bill...5.19.21...5.19.22., 
+   zander_moricz = zander.moricz...5.19.21...5.19.22.) %>%
+   # mutate(Week = as.Date(Week, format='%m/%d/%y')) %>%
+   mutate(dont_say_gay_bill = as.numeric(dont_say_gay_bill))%>%
+   mutate(zander_moricz = as.numeric(zander_moricz)) %>%
+   mutate(state.abbreviation = state.abb[match(Region,state.name)]) 
+
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+
+library("RColorBrewer")
+
+df <- map_data_processed
+
+# give state boundaries a white border
+# l <- list(color = toRGB("white"), width = 10)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- fig %>% add_trace(
+    type="choropleth",
+    text = paste0("<b>State:</b> ", df$Region, "<br>",
+            "<b>Interest</b> ", df$dont_say_gay_bill),
+    hoverinfo = 'text',
+    locations=df$state.abbreviation,
+    z=df$dont_say_gay_bill,
+    color = df$dont_say_gay_bill,
+    colorscale="Blues",
+    reversescale = TRUE,
+    marker=list(line=list(
+      color = 'black',
+      width=0.5)
+    )
+  )
+fig <- fig %>% colorbar(title = "Interest in 'Don't Say Gay Bill'")
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+
+library("RColorBrewer")
+
+df <- map_data_processed
+
+# give state boundaries a white border
+# l <- list(color = toRGB("white"), width = 10)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- fig %>% add_trace(
+    type="choropleth",
+    text = paste0("<b>State:</b> ", df$Region, "<br>",
+            "<b>Interest</b> ", df$zander_moricz),
+    hoverinfo = 'text',
+    locations=df$state.abbreviation,
+    z=df$zander_moricz,
+    color = df$zander_moricz,
+    colorscale="Sunset",
+    # reversescale = TRUE,
+    marker=list(line=list(
+      color = 'black',
+      width=0.5)
+    )
+  )
+fig <- fig %>% colorbar(title = "Interest in 'Zander Moricz'")
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+```
+
