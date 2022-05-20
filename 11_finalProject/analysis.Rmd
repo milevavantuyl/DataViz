@@ -15,17 +15,17 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-# Context: May 10, 2022 - Zander Moricz
-![](./news.png){height=50%}
+# Week of May 8, 2022 - Zander Moricz
+![](./news.png){width=100%}
 
-# Google Trend Data
+# Google Trends Data
 ```{r include = FALSE}
 # Load data from google trends
 timeline_data <- read.csv("./timeline_data.csv")
 map_data <- read.csv("./geoMap_data.csv")
 ```
 
-Interest in the query "Don't Say Gay Bill" and "Zander Moricz" from March 2021 to present
+### Processed Data
 ```{r echo=FALSE, warning=FALSE}
 # process time series data
 timeline_data_processed <- timeline_data %>%
@@ -39,7 +39,7 @@ timeline_data_processed <- timeline_data %>%
 # All NA values correspond to Interest "<1"
 timeline_data_processed[is.na(timeline_data_processed)] = 0
 
-head(timeline_data_processed)
+tail(timeline_data_processed, 20)
 ```
 
 ```{r echo=FALSE}
@@ -53,19 +53,20 @@ timeline_long <- timeline_data_processed %>%
             direction="long") %>% 
    rename(query = time) %>%
    rename(Interest = value)
-
-head(timeline_long)
 ```
+
+### Time Series Data
+<!-- # Interest in the "Don't Say Gay Bill" and "Zander Moricz" -->
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 library(plotly)
 
 fig <- plot_ly(data = timeline_long, x = ~Week, y = ~Interest, color = ~query, type = "scatter", mode = "lines+markers", width=1000, height=500)
-fig <- fig %>% layout(title = 'Interest in Queries throughout USA')
+fig <- fig %>% layout(title = "Interest in 'Don't Say Gay Bill' and 'Zander Moricz' queries in the US over time") %>% config(displayModeBar = FALSE)
 fig
 
 ```
-
+### Geographic data 
 ```{r echo=FALSE, warning=FALSE}
 map_data_processed <- map_data %>%
    rename( dont_say_gay_bill = dont.say.gay.bill...5.19.21...5.19.22., 
@@ -77,6 +78,7 @@ map_data_processed <- map_data %>%
 
 ```
 
+<!-- ### Interest across the country on the "Don't Say Gay Bill" -->
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -94,7 +96,7 @@ g <- list(
   lakecolor = toRGB('white')
 )
 
-fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- plot_geo(df, locationmode = 'USA-states', width=1000, height=500)
 fig <- fig %>% add_trace(
     type="choropleth",
     text = paste0("<b>State:</b> ", df$Region, "<br>",
@@ -112,12 +114,14 @@ fig <- fig %>% add_trace(
   )
 fig <- fig %>% colorbar(title = "Interest in 'Don't Say Gay Bill'")
 fig <- fig %>% layout(
+   title = "Interest in 'Don't Say Gay Bill' query throughout the US",
     geo = g
-  )
+  )%>% config(displayModeBar = FALSE)
 
 fig
 ```
 
+<!-- ### Interest across the country on "Zander Moricz" -->
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -135,7 +139,7 @@ g <- list(
   lakecolor = toRGB('white')
 )
 
-fig <- plot_geo(df, locationmode = 'USA-states')
+fig <- plot_geo(df, locationmode = 'USA-states', width=1000, height=500)
 fig <- fig %>% add_trace(
     type="choropleth",
     text = paste0("<b>State:</b> ", df$Region, "<br>",
@@ -153,8 +157,9 @@ fig <- fig %>% add_trace(
   )
 fig <- fig %>% colorbar(title = "Interest in 'Zander Moricz'")
 fig <- fig %>% layout(
+   title = "Interest in 'Zander Moricz' query throughout the US",
     geo = g
-  )
+  ) %>% config(displayModeBar = FALSE)
 
 fig
 ```
