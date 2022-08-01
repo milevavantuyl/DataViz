@@ -1,7 +1,8 @@
 # DataViz
 
-## Mileva Van Tuyl, Spring 2022  
-#### Data Visualization Portfolio    
+This repository serves as a portfolio of data visualizations and R Shiny applications and dashboards that I have created over the course of different data science projects. 
+ 
+#### Data Visualization Portfolio
 
 
 1. An analysis of data from the 2018 General Social Survey on fatigue experienced by the American people
